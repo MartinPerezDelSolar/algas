@@ -51,10 +51,10 @@
     }
 
     @keyframes corrientePuppet {
-      0% { transform: translateY(0) rotate(0deg) skewX(0deg); }
-      25% { transform: translateY(-6px) rotate(.4deg) skewX(1.2deg); }
-      50% { transform: translateY(-10px) rotate(.9deg) skewX(2.4deg); }
-      75% { transform: translateY(-5px) rotate(.3deg) skewX(1.0deg); }
+      0%   { transform: translateY(0) rotate(0deg) skewX(0deg); }
+      25%  { transform: translateY(-6px) rotate(.4deg) skewX(1.2deg); }
+      50%  { transform: translateY(-10px) rotate(.9deg) skewX(2.4deg); }
+      75%  { transform: translateY(-5px) rotate(.3deg) skewX(1.0deg); }
       100% { transform: translateY(0) rotate(0deg) skewX(0deg); }
     }
 
@@ -147,16 +147,15 @@
 
     .particle {
       position: absolute;
-      border-radius: 999px;
-      mix-blend-mode: multiply; /* ← CAMBIO A MULTIPLY */
-      opacity: 0.4;
+      mix-blend-mode: multiply;
+      opacity: 0.30;
       animation: particleCurrent ease-in-out infinite alternate;
     }
 
     @keyframes particleCurrent {
-      0% { transform: translate3d(0,0,0); }
-      50% { transform: translate3d(var(--driftX), var(--ampY), 0); }
-      100%{ transform: translate3d(0,0,0); }
+      0%   { transform: translate3d(0,0,0); }
+      50%  { transform: translate3d(var(--driftX), var(--ampY), 0); }
+      100% { transform: translate3d(0,0,0); }
     }
 
     .overlay {
@@ -235,10 +234,10 @@
 
     const container = document.getElementById("sea-container");
     const particlesContainer = document.getElementById("particles-layer");
-    let bgImages=[], fgImages=[];
-    let bgReady=false, fgReady=false, revealed=false;
+    let bgImages = [], fgImages = [];
+    let bgReady = false, fgReady = false, revealed = false;
 
-    const random=(a,b)=>a+Math.random()*(b-a);
+    const random = (a,b) => a + Math.random()*(b-a);
 
     function getVH() {
       return window.innerHeight || document.documentElement.clientHeight || screen.height;
@@ -247,51 +246,53 @@
       return window.innerWidth || document.documentElement.clientWidth || screen.width;
     }
 
-    function tryReveal(){
-      if(bgReady && fgReady && !revealed){
-        revealed=true;
+    function tryReveal() {
+      if (bgReady && fgReady && !revealed) {
+        revealed = true;
         container.classList.add("visible");
       }
     }
 
-    function createSea(){
-      container.querySelectorAll("img.alga").forEach(e=>e.remove());
-      bgImages=[]; fgImages=[];
-      bgReady=fgReady=revealed=false;
+    function createSea() {
+      container.querySelectorAll("img.alga").forEach(e => e.remove());
+      bgImages = [];
+      fgImages = [];
+      bgReady = fgReady = revealed = false;
       container.classList.remove("visible");
-      loadBG(); loadFG();
+      loadBG();
+      loadFG();
     }
 
-    /* ---------- FONDO: altura = alto pantalla (PNG entero), sin offsets raros ---------- */
-    function loadBG(){
-      const count=Math.floor(random(10,18));
-      let done=0;
+    /* ---------- FONDO: PNG entero en la altura de la pantalla ---------- */
+    function loadBG() {
+      const count = Math.floor(random(10,18));
+      let done = 0;
 
-      for(let i=0;i<count;i++){
-        const img=document.createElement("img");
-        img.className="alga alga-bg";
-        img.src=algaeSources[Math.floor(Math.random()*algaeSources.length)];
-        img.style.opacity=random(.22,.40);
-        img.style.filter=`blur(${random(1.2,3.2)}px) saturate(.8)`;
-        if(Math.random()<.5) img.style.transform="scaleX(-1)";
-        img.onload=()=>{ done++; if(done===count) layoutBG(); };
+      for (let i = 0; i < count; i++) {
+        const img = document.createElement("img");
+        img.className = "alga alga-bg";
+        img.src = algaeSources[Math.floor(Math.random()*algaeSources.length)];
+        img.style.opacity = random(.22,.40);
+        img.style.filter  = `blur(${random(1.2,3.2)}px) saturate(.8)`;
+        if (Math.random() < .5) img.style.transform = "scaleX(-1)";
+        img.onload = () => { done++; if (done === count) layoutBG(); };
         bgImages.push(img);
         container.insertBefore(img, container.firstChild);
       }
     }
 
-    function layoutBG(){
+    function layoutBG() {
       if (!bgImages.length) return;
 
       const vh = getVH();
       const vw = getVW();
 
-      const totalHeight = vh;  // el PNG se adapta EXACTO a la altura de la pantalla
-      const topOffset   = 0;   // nada fuera del contenedor: evita cropeos internos
+      const totalHeight = vh;  // ajusta a la altura de pantalla
+      const topOffset   = 0;
 
       let currentX = random(vw * 0.05, vw * 0.10);
 
-      bgImages.forEach(img=>{
+      bgImages.forEach(img => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
         let width   = totalHeight * ratio;
         const maxWidth = vw * 0.35;
@@ -314,36 +315,35 @@
       tryReveal();
     }
 
-    /* ---------- FRENTE: misma lógica, PNG entero en pantalla ---------- */
-    function loadFG(){
-      const count=Math.floor(random(7,12));
-      let done=0;
+    /* ---------- FRENTE ---------- */
+    function loadFG() {
+      const count = Math.floor(random(7,12));
+      let done = 0;
 
-      for(let i=0;i<count;i++){
-        const img=document.createElement("img");
-        img.className="alga alga-fg";
-        img.src=algaeSources[Math.floor(Math.random()*algaeSources.length)];
-        img.style.opacity=random(.50,.78);
-        if(Math.random()<.5) img.style.transform="scaleX(-1)";
-        img.onload=()=>{ done++; if(done===count) layoutFG(); };
+      for (let i = 0; i < count; i++) {
+        const img = document.createElement("img");
+        img.className = "alga alga-fg";
+        img.src = algaeSources[Math.floor(Math.random()*algaeSources.length)];
+        img.style.opacity = random(.50,.78);
+        if (Math.random() < .5) img.style.transform = "scaleX(-1)";
+        img.onload = () => { done++; if (done === count) layoutFG(); };
         fgImages.push(img);
         container.insertBefore(img, container.querySelector(".overlay"));
       }
     }
 
-    function layoutFG(){
+    function layoutFG() {
       if (!fgImages.length) return;
 
       const vh = getVH();
       const vw = getVW();
 
-      const totalHeight = vh;
-      const topOffset   = 0;
+      const totalHeight   = vh;
+      const topOffset     = 0;
+      const segments      = fgImages.length - 1 || 1;
+      const segmentWidth  = vw / segments;
 
-      const segments = fgImages.length - 1 || 1;
-      const segmentWidth = vw / segments;
-
-      fgImages.forEach((img,i)=>{
+      fgImages.forEach((img, i) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
         const width = totalHeight * ratio * 1.05;
 
@@ -360,42 +360,66 @@
       tryReveal();
     }
 
-    /* ---------- PARTÍCULAS ---------- */
-    function createParticles(){
-      particlesContainer.innerHTML="";
-      const palette=[
-        "rgba(230,245,255,.9)",
-        "rgba(200,225,240,.8)",
-        "rgba(180,210,220,.75)",
-        "rgba(160,205,210,.7)"
-      ];
+    /* ---------- PARTÍCULAS ORGÁNICAS ---------- */
+    function createParticles() {
+  particlesContainer.innerHTML = "";
 
-      for(let i=0;i<60;i++){
-        const p=document.createElement("div");
-        p.className="particle";
-        const s=random(2,7);
-        p.style.width=p.style.height=s+"px";
-        p.style.background=palette[Math.floor(Math.random()*palette.length)];
-        if(s>4) p.style.filter=`blur(${random(.5,1.8)}px)`;
+  const palette = [
+    "rgba(200,230,240,0.40)",
+    "rgba(180,210,220,0.38)",
+    "rgba(160,200,210,0.34)",
+    "rgba(140,180,190,0.32)"
+  ];
 
-        p.style.left=random(0,100)+"vw";
-        p.style.top=random(0,100)+"vh";
-        p.style.setProperty("--driftX", random(4,14)+"vw");
-        p.style.setProperty("--ampY", random(-10,10)+"px");
+  const totalParticles = 150;
+  
+  for (let i = 0; i < totalParticles; i++) {
+    const p = document.createElement("div");
+    p.className = "particle";
 
-        p.style.animationDuration=random(16,32)+"s";
-        p.style.animationDelay=random(-32,0)+"s";
+    // Formas orgánicas: ancho y alto distintos
+    const w = random(2, 10);
+    const h = random(2, 10);
+    p.style.width  = w + "px";
+    p.style.height = h + "px";
 
-        particlesContainer.appendChild(p);
-      }
+    // Bordes irregulares
+    const r1 = random(40, 90);
+    const r2 = random(40, 90);
+    const r3 = random(40, 90);
+    const r4 = random(40, 90);
+    p.style.borderRadius = `${r1}% ${r2}% ${r3}% ${r4}%`;
+
+    // Color
+    p.style.background = palette[Math.floor(Math.random() * palette.length)];
+
+    // ---- BLUR ----
+    // 10% sin blur
+    if (Math.random() > 0.10) {  
+      p.style.filter = `blur(${random(0.5, 3)}px)`; 
     }
 
-    window.addEventListener("DOMContentLoaded",()=>{
+    // Posición inicial
+    p.style.left = random(0, 100) + "vw";
+    p.style.top  = random(0, 100) + "vh";
+
+    // Movimiento de corriente
+    p.style.setProperty("--driftX", random(3, 10) + "vw");
+    p.style.setProperty("--ampY",  random(-8, 8) + "px");
+
+    p.style.animationDuration = random(14, 30) + "s";
+    p.style.animationDelay    = random(-25, 0) + "s";
+
+    particlesContainer.appendChild(p);
+  }
+}
+
+    window.addEventListener("DOMContentLoaded", () => {
       createSea();
       createParticles();
     });
 
-    window.addEventListener("resize",()=>{
+    window.addEventListener("resize", () => {
       layoutBG();
       layoutFG();
       createParticles();
