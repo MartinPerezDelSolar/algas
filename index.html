@@ -41,6 +41,7 @@
       pointer-events: none;
       object-fit: cover;
       transform-origin: 50% 100%;
+      transform: translateZ(0); /* pequeña ayuda para Safari/iPad */
     }
     .alga-bg { z-index: 0; }
     .alga-fg {
@@ -256,7 +257,7 @@
       loadBG(); loadFG();
     }
 
-    /* ---------- FONDO: ALGAS ANCLADAS POR ABAJO Y QUE PASAN ARRIBA ---------- */
+    /* ---------- FONDO: ALGAS ANCLADAS POR ABAJO, MÁS ALTAS PERO NO ENORMES ---------- */
     function loadBG(){
       const count=Math.floor(random(10,18));
       let done=0;
@@ -276,31 +277,31 @@
 
     function layoutBG(){
       const vh=innerHeight, vw=innerWidth;
-      const h=vh*1.60;              // 160% de la altura de pantalla
-      const bottomOffset=-vh*0.30;   // base 30% por debajo
+      const h = vh * 1.25;          // 125% de la pantalla
+      const bottomOffset = -vh*0.15; // base 15% por debajo del borde inferior
 
-      let x=random(vw*.05, vw*.1);
+      let x = random(vw*.05, vw*.1);
 
       bgImages.forEach(img=>{
-        const r=img.naturalWidth/img.naturalHeight || .4;
-        let w=vh*r*.95;
-        if(w>vw*.35) w=vw*.35;
-        if(x+w > vw-vw*.05){ img.remove(); return; }
+        const r = img.naturalWidth/img.naturalHeight || .4;
+        let w  = vh * r * .95;
+        if (w > vw*.35) w = vw*.35;
+        if (x + w > vw - vw*.05) { img.remove(); return; }
 
-        img.style.height=h+"px";
-        img.style.width=w+"px";
-        img.style.left=x+"px";
-        img.style.top="auto";
-        img.style.bottom=bottomOffset+"px";
+        img.style.height = h + "px";
+        img.style.width  = w + "px";
+        img.style.left   = x + "px";
+        img.style.top    = "auto";
+        img.style.bottom = bottomOffset + "px";
 
-        x+=w+random(vw*.1, vw*.2);
+        x += w + random(vw*.1, vw*.2);
       });
 
-      bgReady=true;
+      bgReady = true;
       tryReveal();
     }
 
-    /* ---------- FRENTE: ALGAS ANCLADAS POR ABAJO Y QUE PASAN ARRIBA ---------- */
+    /* ---------- FRENTE: ALGAS ANCLADAS POR ABAJO IGUAL ---------- */
     function loadFG(){
       const count=Math.floor(random(7,12));
       let done=0;
@@ -319,24 +320,24 @@
 
     function layoutFG(){
       const vh=innerHeight, vw=innerWidth;
-      const h=vh*1.60;
-      const bottomOffset=-vh*0.30;
-      const seg=fgImages.length-1 || 1;
-      const sw=vw/seg;
+      const h = vh * 1.25;
+      const bottomOffset = -vh*0.15;
+      const seg = fgImages.length - 1 || 1;
+      const sw  = vw / seg;
 
       fgImages.forEach((img,i)=>{
-        const r=img.naturalWidth/img.naturalHeight || .4;
-        const w=vh*r*1.08;
-        const cx=i*sw+random(-sw*.15, sw*.15);
+        const r = img.naturalWidth/img.naturalHeight || .4;
+        const w = vh * r * 1.08;
+        const cx = i*sw + random(-sw*.15, sw*.15);
 
-        img.style.height=h+"px";
-        img.style.width=w+"px";
-        img.style.left=(cx-w/2)+"px";
-        img.style.top="auto";
-        img.style.bottom=bottomOffset+"px";
+        img.style.height = h + "px";
+        img.style.width  = w + "px";
+        img.style.left   = (cx - w/2) + "px";
+        img.style.top    = "auto";
+        img.style.bottom = bottomOffset + "px";
       });
 
-      fgReady=true;
+      fgReady = true;
       tryReveal();
     }
 
