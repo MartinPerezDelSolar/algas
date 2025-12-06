@@ -16,27 +16,10 @@
       height: 100%;
       overflow: hidden;
       background:
-        radial-gradient(circle at 10% 0%, #244d55 0%, #05252a 38%, #01070a 82%),
-        linear-gradient(to bottom, #02151a, #000000);
+        radial-gradient(circle at 10% 0%, #3f7f82 0%, #0b3a3e 35%, #020e10 80%),
+        linear-gradient(to bottom, #083234, #020b0d);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: #e5f3ff;
-    }
-
-    /* MÁSCARA DE PRE-CARGA PARA QUE EL ARMADO SEA ELEGANTE EN IPAD Y PC */
-    .preload-mask {
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(0,25,40,0.95), rgba(0,0,0,1)),
-        linear-gradient(to bottom, #000810, #000000);
-      z-index: 20;
-      opacity: 1;
-      pointer-events: auto;
-      transition: opacity .7s ease-out;
-    }
-    .preload-mask.hidden {
-      opacity: 0;
-      pointer-events: none;
     }
 
     .sea-container {
@@ -83,7 +66,7 @@
       transform: translateY(30px);
       opacity: 0;
       z-index: 2;
-      transition: opacity .8s ease-out .15s, transform .8s ease-out .15s;
+      transition: opacity .8s ease-out .1s, transform .8s ease-out .1s;
     }
     .sea-container.visible .center-block {
       opacity: 1;
@@ -181,8 +164,8 @@
       z-index: 4;
       pointer-events: none;
       background:
-        radial-gradient(circle at 50% 10%, rgba(160,220,255,.15), transparent 55%),
-        linear-gradient(to bottom, rgba(2,16,26,.65), rgba(0,0,0,.9));
+        radial-gradient(circle at 50% 15%, rgba(255,255,220,.08), transparent),
+        linear-gradient(to bottom, rgba(10,35,45,.50), rgba(0,0,0,.75));
       mix-blend-mode: soft-light;
     }
 
@@ -221,9 +204,6 @@
 </head>
 
 <body>
-  <!-- CAPA DE PRELOAD PARA UN ARMADO ELEGANTE EN IPAD Y PC -->
-  <div class="preload-mask" id="preload-mask"></div>
-
   <div class="sea-container" id="sea-container">
 
     <div class="center-block">
@@ -254,8 +234,6 @@
 
     const container = document.getElementById("sea-container");
     const particlesContainer = document.getElementById("particles-layer");
-    const preloadMask = document.getElementById("preload-mask");
-
     let bgImages = [], fgImages = [];
     let bgReady = false, fgReady = false, revealed = false;
 
@@ -268,19 +246,10 @@
       return window.innerWidth || document.documentElement.clientWidth || screen.width;
     }
 
-    function finishReveal() {
-      if (!preloadMask) return;
-      // pequeño delay para que el fade sea suave
-      setTimeout(() => {
-        preloadMask.classList.add("hidden");
-      }, 80);
-    }
-
     function tryReveal() {
       if (bgReady && fgReady && !revealed) {
         revealed = true;
         container.classList.add("visible");
-        finishReveal();
       }
     }
 
@@ -288,12 +257,8 @@
       container.querySelectorAll("img.alga").forEach(e => e.remove());
       bgImages = [];
       fgImages = [];
-      bgReady = fgReady = false;
-      revealed = false;
+      bgReady = fgReady = revealed = false;
       container.classList.remove("visible");
-      if (preloadMask) {
-        preloadMask.classList.remove("hidden");
-      }
       loadBG();
       loadFG();
     }
@@ -395,112 +360,76 @@
       tryReveal();
     }
 
-    /* ---------- PARTÍCULAS ORGÁNICAS, NOCHE PROFUNDA ---------- */
+    /* ---------- PARTÍCULAS ORGÁNICAS (150, 10% sin blur, 90% con blur) ---------- */
     function createParticles() {
       particlesContainer.innerHTML = "";
 
-      const smallPalette = [
-        "rgba(200,230,240,0.45)",
-        "rgba(180,210,220,0.40)",
-        "rgba(160,200,210,0.36)",
-        "rgba(140,180,190,0.34)"
+      const palette = [
+        "rgba(200,230,240,0.40)",
+        "rgba(180,210,220,0.38)",
+        "rgba(160,200,210,0.34)",
+        "rgba(140,180,190,0.32)"
       ];
 
-      const bigPalette = [
-        "rgba(190,230,240,0.32)",
-        "rgba(170,215,235,0.30)",
-        "rgba(150,205,225,0.28)"
-      ];
-
-      const totalParticles = 180;
-      const bigCount = 24;
+      const totalParticles = 150;
 
       for (let i = 0; i < totalParticles; i++) {
         const p = document.createElement("div");
         p.className = "particle";
 
-        if (i < bigCount) {
-          const sizeBase = random(26, 60);
-          const w = sizeBase * random(0.9, 1.3);
-          const h = sizeBase * random(0.7, 1.1);
-          p.style.width  = w + "px";
-          p.style.height = h + "px";
+        // Formas orgánicas: ancho y alto distintos
+        const w = random(2, 10);
+        const h = random(2, 10);
+        p.style.width  = w + "px";
+        p.style.height = h + "px";
 
-          const r1 = random(60, 100);
-          const r2 = random(60, 100);
-          const r3 = random(60, 100);
-          const r4 = random(60, 100);
-          p.style.borderRadius = `${r1}% ${r2}% ${r3}% ${r4}%`;
+        // Bordes irregulares
+        const r1 = random(40, 90);
+        const r2 = random(40, 90);
+        const r3 = random(40, 90);
+        const r4 = random(40, 90);
+        p.style.borderRadius = `${r1}% ${r2}% ${r3}% ${r4}%`;
 
-          p.style.background = bigPalette[Math.floor(Math.random()*bigPalette.length)];
-          p.style.opacity    = 0.22;
+        // Color
+        p.style.background = palette[Math.floor(Math.random() * palette.length)];
 
-          p.style.filter = `blur(${random(8, 22)}px)`;
-
-          p.style.left = random(-10, 110) + "vw";
-          p.style.top  = random(-5, 105) + "vh";
-
-          p.style.setProperty("--driftX", random(4, 10) + "vw");
-          p.style.setProperty("--ampY",  random(-12, 12) + "px";
-
-          p.style.animationDuration = random(26, 46) + "s";
-          p.style.animationDelay    = random(-40, 0) + "s";
-        } else {
-          const w = random(2, 10);
-          const h = random(2, 10);
-          p.style.width  = w + "px";
-          p.style.height = h + "px";
-
-          const r1 = random(40, 90);
-          const r2 = random(40, 90);
-          const r3 = random(40, 90);
-          const r4 = random(40, 90);
-          p.style.borderRadius = `${r1}% ${r2}% ${r3}% ${r4}%`;
-
-          p.style.background = smallPalette[Math.floor(Math.random()*smallPalette.length)];
-          p.style.opacity    = 0.32;
-
-          if (Math.random() > 0.10) {
-            p.style.filter = `blur(${random(0.5, 3)}px)`;
-          }
-
-          p.style.left = random(0, 100) + "vw";
-          p.style.top  = random(0, 100) + "vh";
-
-          p.style.setProperty("--driftX", random(3, 10) + "vw");
-          p.style.setProperty("--ampY",  random(-8, 8) + "px";
-
-          p.style.animationDuration = random(14, 30) + "s";
-          p.style.animationDelay    = random(-25, 0) + "s";
+        // 10% sin blur, 90% con blur hasta aprox 3px
+        if (Math.random() > 0.10) {
+          p.style.filter = `blur(${random(0.5, 3)}px)`;
         }
+
+        // Posición
+        p.style.left = random(0, 100) + "vw";
+        p.style.top  = random(0, 100) + "vh";
+
+        // Movimiento
+        p.style.setProperty("--driftX", random(3, 10) + "vw");
+        p.style.setProperty("--ampY",  random(-8, 8) + "px");
+
+        p.style.animationDuration = random(14, 30) + "s";
+        p.style.animationDelay    = random(-25, 0) + "s";
 
         particlesContainer.appendChild(p);
       }
     }
 
-    /* INICIO: USAMOS window.load PARA DAR TIEMPO A SAFARI/IPAD */
-    window.addEventListener("load", () => {
+    window.addEventListener("DOMContentLoaded", () => {
       createSea();
       createParticles();
     });
 
-    /* En resize / orientation solo reajustamos suavemente, sin recrear todo */
-    let resizeTimeout;
-    function softRelayout() {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        layoutBG();
-        layoutFG();
-        // Las partículas se quedan igual, no se re-randomiza todo
-      }, 150);
-    }
+    window.addEventListener("resize", () => {
+      layoutBG();
+      layoutFG();
+      createParticles();
+    });
 
-    window.addEventListener("resize", softRelayout);
     window.addEventListener("orientationchange", () => {
       setTimeout(() => {
         layoutBG();
         layoutFG();
-      }, 350);
+        createParticles();
+      }, 300);
     });
   </script>
 </body>
