@@ -22,6 +22,23 @@
       color: #e5f3ff;
     }
 
+    /* MÁSCARA DE PRE-CARGA PARA QUE EL ARMADO SEA ELEGANTE EN IPAD Y PC */
+    .preload-mask {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(0,25,40,0.95), rgba(0,0,0,1)),
+        linear-gradient(to bottom, #000810, #000000);
+      z-index: 20;
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity .7s ease-out;
+    }
+    .preload-mask.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     .sea-container {
       position: relative;
       width: 100vw;
@@ -40,7 +57,6 @@
       position: absolute;
       pointer-events: none;
       object-fit: cover;
-      height: 100%;          /* <- la altura SIEMPRE es la del contenedor */
       transform-origin: 50% 100%;
       transform: translateZ(0);
     }
@@ -67,7 +83,7 @@
       transform: translateY(30px);
       opacity: 0;
       z-index: 2;
-      transition: opacity .8s ease-out .1s, transform .8s ease-out .1s;
+      transition: opacity .8s ease-out .15s, transform .8s ease-out .15s;
     }
     .sea-container.visible .center-block {
       opacity: 1;
@@ -205,6 +221,9 @@
 </head>
 
 <body>
+  <!-- CAPA DE PRELOAD PARA UN ARMADO ELEGANTE EN IPAD Y PC -->
+  <div class="preload-mask" id="preload-mask"></div>
+
   <div class="sea-container" id="sea-container">
 
     <div class="center-block">
@@ -235,19 +254,33 @@
 
     const container = document.getElementById("sea-container");
     const particlesContainer = document.getElementById("particles-layer");
+    const preloadMask = document.getElementById("preload-mask");
+
     let bgImages = [], fgImages = [];
     let bgReady = false, fgReady = false, revealed = false;
 
     const random = (a,b) => a + Math.random()*(b-a);
 
+    function getVH() {
+      return window.innerHeight || document.documentElement.clientHeight || screen.height;
+    }
     function getVW() {
       return window.innerWidth || document.documentElement.clientWidth || screen.width;
+    }
+
+    function finishReveal() {
+      if (!preloadMask) return;
+      // pequeño delay para que el fade sea suave
+      setTimeout(() => {
+        preloadMask.classList.add("hidden");
+      }, 80);
     }
 
     function tryReveal() {
       if (bgReady && fgReady && !revealed) {
         revealed = true;
         container.classList.add("visible");
+        finishReveal();
       }
     }
 
@@ -255,13 +288,17 @@
       container.querySelectorAll("img.alga").forEach(e => e.remove());
       bgImages = [];
       fgImages = [];
-      bgReady = fgReady = revealed = false;
+      bgReady = fgReady = false;
+      revealed = false;
       container.classList.remove("visible");
+      if (preloadMask) {
+        preloadMask.classList.remove("hidden");
+      }
       loadBG();
       loadFG();
     }
 
-    /* ---------- FONDO: distribución elegante, altura por CSS ---------- */
+    /* ---------- FONDO: PNG entero en la altura de la pantalla ---------- */
     function loadBG() {
       const count = Math.floor(random(10,18));
       let done = 0;
@@ -282,15 +319,17 @@
     function layoutBG() {
       if (!bgImages.length) return;
 
+      const vh = getVH();
       const vw = getVW();
+
+      const totalHeight = vh;
       const topOffset   = 0;
 
       let currentX = random(vw * 0.05, vw * 0.10);
 
       bgImages.forEach(img => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        // el alto lo maneja CSS (100%), usamos ratio solo para referencia
-        let width   = (window.innerHeight || 800) * ratio;
+        let width   = totalHeight * ratio;
         const maxWidth = vw * 0.35;
         if (width > maxWidth) width = maxWidth;
 
@@ -299,6 +338,7 @@
           return;
         }
 
+        img.style.height = totalHeight + "px";
         img.style.width  = width + "px";
         img.style.top    = topOffset + "px";
         img.style.left   = currentX + "px";
@@ -330,20 +370,22 @@
     function layoutFG() {
       if (!fgImages.length) return;
 
+      const vh = getVH();
       const vw = getVW();
+
+      const totalHeight   = vh;
       const topOffset     = 0;
       const segments      = fgImages.length - 1 || 1;
       const segmentWidth  = vw / segments;
 
-      const approxHeight = window.innerHeight || 800;
-
       fgImages.forEach((img, i) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        const width = approxHeight * ratio * 1.05;
+        const width = totalHeight * ratio * 1.05;
 
         const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
         const left   = center - width / 2;
 
+        img.style.height = totalHeight + "px";
         img.style.width  = width + "px";
         img.style.top    = topOffset + "px";
         img.style.left   = left + "px";
@@ -357,7 +399,6 @@
     function createParticles() {
       particlesContainer.innerHTML = "";
 
-      // polvo/plancton frío, noche profunda
       const smallPalette = [
         "rgba(200,230,240,0.45)",
         "rgba(180,210,220,0.40)",
@@ -372,13 +413,12 @@
       ];
 
       const totalParticles = 180;
-      const bigCount = 24; // halos grandes difusos
+      const bigCount = 24;
 
       for (let i = 0; i < totalParticles; i++) {
         const p = document.createElement("div");
         p.className = "particle";
 
-        // --- halos grandes cinematográficos ---
         if (i < bigCount) {
           const sizeBase = random(26, 60);
           const w = sizeBase * random(0.9, 1.3);
@@ -405,9 +445,7 @@
 
           p.style.animationDuration = random(26, 46) + "s";
           p.style.animationDelay    = random(-40, 0) + "s";
-        } 
-        // --- polvo/partículas pequeñas ---
-        else {
+        } else {
           const w = random(2, 10);
           const h = random(2, 10);
           p.style.width  = w + "px";
@@ -422,7 +460,6 @@
           p.style.background = smallPalette[Math.floor(Math.random()*smallPalette.length)];
           p.style.opacity    = 0.32;
 
-          // 10% sin blur, 90% con blur
           if (Math.random() > 0.10) {
             p.style.filter = `blur(${random(0.5, 3)}px)`;
           }
@@ -431,7 +468,7 @@
           p.style.top  = random(0, 100) + "vh";
 
           p.style.setProperty("--driftX", random(3, 10) + "vw");
-          p.style.setProperty("--ampY",  random(-8, 8) + "px");
+          p.style.setProperty("--ampY",  random(-8, 8) + "px";
 
           p.style.animationDuration = random(14, 30) + "s";
           p.style.animationDelay    = random(-25, 0) + "s";
@@ -441,23 +478,29 @@
       }
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
+    /* INICIO: USAMOS window.load PARA DAR TIEMPO A SAFARI/IPAD */
+    window.addEventListener("load", () => {
       createSea();
       createParticles();
     });
 
-    window.addEventListener("resize", () => {
-      layoutBG();
-      layoutFG();
-      createParticles();
-    });
+    /* En resize / orientation solo reajustamos suavemente, sin recrear todo */
+    let resizeTimeout;
+    function softRelayout() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        layoutBG();
+        layoutFG();
+        // Las partículas se quedan igual, no se re-randomiza todo
+      }, 150);
+    }
 
+    window.addEventListener("resize", softRelayout);
     window.addEventListener("orientationchange", () => {
       setTimeout(() => {
         layoutBG();
         layoutFG();
-        createParticles();
-      }, 300);
+      }, 350);
     });
   </script>
 </body>
