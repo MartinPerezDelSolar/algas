@@ -36,10 +36,10 @@
       position: absolute;
       object-fit: cover;
       pointer-events: none;
-      transform-origin: 50% 100%; /* ancladas abajo */
+      transform-origin: 50% 100%; /* ancladas abajo para el efecto puppet */
     }
 
-    /* Fondo — ahora con efecto de agua también */
+    /* Fondo — con blur + efecto agua ahora también */
     .alga-bg {
       z-index: 0;
     }
@@ -47,8 +47,6 @@
     /* Frente — con efecto de agua + puppet */
     .alga-fg {
       z-index: 2;
-      height: 100vh;
-      top: 0;
       filter: saturate(0.95) url(#agua-suave);
       animation: corrientePuppet 12s ease-in-out infinite;
     }
@@ -63,32 +61,13 @@
     }
 
     /* ---------------------------------
-       SUELO MARINO (dunas/colinas)
-       --------------------------------- */
-    .seabed {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 12vh;     /* 12% de la pantalla */
-      z-index: 3;       /* tapa algas fondo y frente */
-      pointer-events: none;
-    }
-
-    .seabed svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    /* ---------------------------------
        PARTÍCULAS EN EL AGUA
        --------------------------------- */
     .particles {
       position: absolute;
       inset: 0;
       pointer-events: none;
-      z-index: 3; /* sobre algas y suelo, bajo overlay */
+      z-index: 3; /* sobre algas, bajo overlay */
       overflow: hidden;
     }
 
@@ -122,7 +101,7 @@
         radial-gradient(circle at 50% 15%, rgba(255,255,220,0.08) 0, transparent 55%),
         linear-gradient(to bottom, rgba(10,35,45,0.50), rgba(0,0,0,0.75));
       mix-blend-mode: soft-light;
-      z-index: 4; /* sobre suelo y partículas */
+      z-index: 4;
     }
 
     /* Grano */
@@ -132,7 +111,7 @@
       pointer-events: none;
       opacity: 0.16;
       mix-blend-mode: soft-light;
-      z-index: 5; /* sobre overlay */
+      z-index: 5;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
     }
   </style>
@@ -140,32 +119,6 @@
 
 <body>
   <div class="sea-container" id="sea-container">
-
-    <!-- SUELO MARINO (capa superior a las algas, sin movimiento) -->
-    <div class="seabed">
-      <svg viewBox="0 0 100 20" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="seabedGrad" x1="0" y1="0" x2="0" y2="1">
-            <!-- tonos más claros verdozo/gris/marrón -->
-            <stop offset="0%"  stop-color="#6f8266"/>
-            <stop offset="45%" stop-color="#5d6f5b"/>
-            <stop offset="100%" stop-color="#495548"/>
-          </linearGradient>
-        </defs>
-
-        <!-- Dunas suaves -->
-        <path d="
-          M0,20
-          C 8,16 16,15 26,16
-          C 36,17 46,14 56,15
-          C 66,16 76,14 86,15
-          C 93,16 97,17 100,16
-          L100,20 Z"
-          fill="url(#seabedGrad)"
-        />
-      </svg>
-    </div>
-
     <!-- Partículas flotando en el agua -->
     <div class="particles" id="particles-layer"></div>
 
@@ -194,7 +147,7 @@
         <feDisplacementMap
             in="SourceGraphic"
             in2="noise"
-            scale="2"
+            scale="12"
             xChannelSelector="R"
             yChannelSelector="G" />
       </filter>
@@ -234,7 +187,7 @@
 
     /* ----- FONDO ----- */
     function createBackgroundAlgae() {
-      // AUMENTAMOS cantidad de algas del fondo
+      // cantidad aumentada en versiones previas
       const count = Math.floor(random(10, 18));
       let loaded = 0;
 
@@ -247,7 +200,7 @@
         img.style.opacity = random(0.22, 0.40).toFixed(2);
 
         const blur = random(1.2, 3.2);
-        // ahora también con efecto de agua
+        // blur + efecto agua
         img.style.filter = `blur(${blur.toFixed(1)}px) saturate(0.8) url(#agua-suave)`;
 
         if (Math.random() < 0.5) img.style.transform = "scaleX(-1)";
@@ -267,13 +220,16 @@
 
       const vh = window.innerHeight;
       const vw = window.innerWidth;
-      const height = vh;
+
+      const totalHeight = vh * 1.1;   // 110% de la pantalla
+      const topOffset  = -vh * 0.1;   // subimos 10% para que quede escondida la base
 
       let currentX = random(0.05 * vw, 0.1 * vw);
 
       bgImages.forEach(img => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
 
+        // ancho sigue calculado usando vh original, como tenías
         let width = vh * ratio * 0.95;
         const maxWidth = vw * 0.35;
         if (width > maxWidth) width = maxWidth;
@@ -283,10 +239,10 @@
           return;
         }
 
-        img.style.height = height + "px";
-        img.style.width = width + "px";
-        img.style.top = "0px";
-        img.style.left = currentX + "px";
+        img.style.height = totalHeight + "px";
+        img.style.width  = width + "px";
+        img.style.top    = topOffset + "px";
+        img.style.left   = currentX + "px";
 
         const gap = random(0.10 * vw, 0.20 * vw);
         currentX += width + gap;
@@ -295,7 +251,7 @@
 
     /* ----- FRENTE ----- */
     function createForegroundAlgae() {
-      // DISMINUIMOS un poco las algas delanteras
+      // cantidad reducida un poco en versiones previas
       const count = Math.floor(random(7, 12));
       let loaded = 0;
 
@@ -327,17 +283,20 @@
       const segments = fgImages.length - 1 || 1;
       const segmentWidth = vw / segments;
 
+      const totalHeight = vh * 1.1;   // también 110% para las delanteras
+      const topOffset  = -vh * 0.1;   // y mismas coordenadas Y
+
       fgImages.forEach((img, i) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        const width = vh * ratio * 1.08;
+        const width = vh * ratio * 1.08; // igual que antes
 
         const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
-        const left = center - width / 2;
+        const left   = center - width / 2;
 
-        img.style.height = vh + "px";
-        img.style.width = width + "px";
-        img.style.left = left + "px";
-        img.style.top = "0px";
+        img.style.height = totalHeight + "px";
+        img.style.width  = width + "px";
+        img.style.left   = left + "px";
+        img.style.top    = topOffset + "px";
       });
     }
 
