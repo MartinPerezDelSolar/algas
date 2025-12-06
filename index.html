@@ -57,11 +57,11 @@
       100% { transform: translateY(0) rotate(0deg) skewX(0deg); }
     }
 
-    /* BLOQUE CENTRAL — AJUSTADO A 12vh */
+    /* BLOQUE CENTRAL — TÍTULO Y BOTONES */
     .center-block {
       position: absolute;
       left: 8vw;
-      top: 12vh;   /* ← ← AQUÍ EL CAMBIO */
+      top: 12vh;   /* posición vertical del nombre */
       transform: translateY(30px);
       opacity: 0;
       z-index: 2;
@@ -73,6 +73,8 @@
     }
 
     .name {
+      display: inline-flex;
+      gap: 0.25em;
       font-size: clamp(2.4rem, 4vw, 3.3rem);
       text-transform: uppercase;
       letter-spacing: .32em;
@@ -80,6 +82,10 @@
       color: #f9fafb;
       text-shadow: 0 1px 0 rgba(0,0,0,.7), 0 18px 40px rgba(0,0,0,.9);
     }
+    .name span {
+      display: inline-block;
+    }
+
     .subtitle {
       font-size: .85rem;
       letter-spacing: .24em;
@@ -174,16 +180,44 @@
       pointer-events: none;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
     }
+
+    /* --------- AJUSTES PARA IPAD / VERTICAL --------- */
+    @media (max-width: 768px) {
+      .center-block {
+        left: 6vw;
+        top: 10vh; /* un poquito más margen arriba en vertical */
+      }
+
+      .name {
+        font-size: clamp(2rem, 6vw, 2.6rem);
+        letter-spacing: 0.26em;
+        flex-direction: column;   /* Andrea / Lértora en dos líneas */
+        gap: 0.05em;
+      }
+
+      .subtitle {
+        font-size: 0.8rem;
+        letter-spacing: 0.20em;
+        margin-bottom: 0.7rem;
+      }
+
+      .nav-button {
+        width: 177px; /* mantiene el ancho, pero se ve bien igual */
+        padding: 0.22rem 0.75rem;
+      }
+    }
   </style>
 </head>
-
 
 <body>
   <div class="sea-container" id="sea-container">
 
     <!-- BLOQUE CON TÍTULO y BOTONES -->
     <div class="center-block">
-      <div class="name">Andrea&nbsp;Lértora</div>
+      <div class="name">
+        <span class="first">Andrea</span>
+        <span class="last">Lértora</span>
+      </div>
       <div class="subtitle">artista plástica</div>
 
       <nav class="nav">
@@ -227,6 +261,7 @@
       loadBG(); loadFG();
     }
 
+    /* ---------- FONDO: ALGAS ANCLADAS POR ABAJO ---------- */
     function loadBG(){
       const count=Math.floor(random(10,18));
       let done=0;
@@ -246,7 +281,8 @@
 
     function layoutBG(){
       const vh=innerHeight, vw=innerWidth;
-      const h=vh*1.10, top=-vh*.10;
+      const h=vh*1.20;               // más altas
+      const bottomOffset=-vh*0.10;    // base 10% por debajo de la pantalla
       let x=random(vw*.05, vw*.1);
 
       bgImages.forEach(img=>{
@@ -258,7 +294,8 @@
         img.style.height=h+"px";
         img.style.width=w+"px";
         img.style.left=x+"px";
-        img.style.top=top+"px";
+        img.style.top="auto";
+        img.style.bottom=bottomOffset+"px";
 
         x+=w+random(vw*.1, vw*.2);
       });
@@ -267,6 +304,7 @@
       tryReveal();
     }
 
+    /* ---------- FRENTE: ALGAS ANCLADAS POR ABAJO ---------- */
     function loadFG(){
       const count=Math.floor(random(7,12));
       let done=0;
@@ -285,7 +323,8 @@
 
     function layoutFG(){
       const vh=innerHeight, vw=innerWidth;
-      const h=vh*1.10, top=-vh*.10;
+      const h=vh*1.20;
+      const bottomOffset=-vh*0.10;
       const seg=fgImages.length-1 || 1;
       const sw=vw/seg;
 
@@ -293,16 +332,19 @@
         const r=img.naturalWidth/img.naturalHeight || .4;
         const w=vh*r*1.08;
         const cx=i*sw+random(-sw*.15, sw*.15);
+
         img.style.height=h+"px";
         img.style.width=w+"px";
         img.style.left=(cx-w/2)+"px";
-        img.style.top=top+"px";
+        img.style.top="auto";
+        img.style.bottom=bottomOffset+"px";
       });
 
       fgReady=true;
       tryReveal();
     }
 
+    /* ---------- PARTÍCULAS ---------- */
     function createParticles(){
       particlesContainer.innerHTML="";
       const palette=[
