@@ -67,18 +67,21 @@ html, body {
       transform: translateZ(0);
     }
     .alga-bg { z-index: 0; }
+
     .alga-fg {
       z-index: 1;
       filter: saturate(.95);
+      /* variable para flip horizontal */
+      --flipX: 1;
       animation: corrientePuppet 12s ease-in-out infinite;
     }
 
     @keyframes corrientePuppet {
-      0%   { transform: translateY(0) rotate(0deg) skewX(0deg); }
-      25%  { transform: translateY(-6px) rotate(.4deg) skewX(1.2deg); }
-      50%  { transform: translateY(-10px) rotate(.9deg) skewX(2.4deg); }
-      75%  { transform: translateY(-5px) rotate(.3deg) skewX(1.0deg); }
-      100% { transform: translateY(0) rotate(0deg) skewX(0deg); }
+      0%   { transform: scaleX(var(--flipX)) translateY(0) rotate(0deg) skewX(0deg); }
+      25%  { transform: scaleX(var(--flipX)) translateY(-6px) rotate(.4deg) skewX(1.2deg); }
+      50%  { transform: scaleX(var(--flipX)) translateY(-10px) rotate(.9deg) skewX(2.4deg); }
+      75%  { transform: scaleX(var(--flipX)) translateY(-5px) rotate(.3deg) skewX(1.0deg); }
+      100% { transform: scaleX(var(--flipX)) translateY(0) rotate(0deg) skewX(0deg); }
     }
 
     /* BLOQUE CENTRAL — TÍTULO Y BOTONES */
@@ -466,25 +469,30 @@ html, body {
       loadFG();
     }
 
-    /* ---------- FONDO: 106% de alto, subido -6%, SIN ALGAS IGUALES JUNTAS ---------- */
+    /* ---------- FONDO: 106% de alto, subido -6%, SIN ALGAS IGUALES CERCA ---------- */
     function loadBG() {
       const count = Math.floor(random(10,18));
       let done = 0;
-      let lastBGIndex = -1;
+
+      // memoria de últimos índices para evitar repeticiones cercanas
+      const recentBG = [];
+      const recentLimitBG = 2; // no repetir ninguna de las 2 últimas
 
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
         img.className = "alga alga-bg";
 
-        let idx;
+        let idx = 0;
         if (algaeSources.length > 1) {
+          let attempts = 0;
           do {
             idx = Math.floor(Math.random() * algaeSources.length);
-          } while (idx === lastBGIndex);
-        } else {
-          idx = 0;
+            attempts++;
+          } while (recentBG.includes(idx) && attempts < 15);
         }
-        lastBGIndex = idx;
+        recentBG.push(idx);
+        if (recentBG.length > recentLimitBG) recentBG.shift();
+
         img.src = algaeSources[idx];
 
         img.style.opacity = random(.22,.40);
@@ -530,29 +538,40 @@ html, body {
       tryReveal();
     }
 
-    /* ---------- FRENTE: mismas reglas + SIN ALGAS PRINCIPALES IGUALES JUNTAS ---------- */
+    /* ---------- FRENTE: mismas reglas + SIN ALGAS PRINCIPALES IGUALES CERCA ---------- */
     function loadFG() {
       const count = Math.floor(random(7,12));
       let done = 0;
-      let lastFGIndex = -1;
+
+      const recentFG = [];
+      const recentLimitFG = 2; // evita que la misma se repita en las 2 últimas posiciones
 
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
         img.className = "alga alga-fg";
 
-        let idx;
+        let idx = 0;
         if (algaeSources.length > 1) {
+          let attempts = 0;
           do {
             idx = Math.floor(Math.random() * algaeSources.length);
-          } while (idx === lastFGIndex);
-        } else {
-          idx = 0;
+            attempts++;
+          } while (recentFG.includes(idx) && attempts < 15);
         }
-        lastFGIndex = idx;
+        recentFG.push(idx);
+        if (recentFG.length > recentLimitFG) recentFG.shift();
+
         img.src = algaeSources[idx];
 
         img.style.opacity = random(.50,.78);
-        if (Math.random() < .5) img.style.transform = "scaleX(-1)";
+
+        // flip horizontal mediante variable CSS para que no lo borre la animación
+        if (Math.random() < .5) {
+          img.style.setProperty("--flipX", "-1");
+        } else {
+          img.style.setProperty("--flipX", "1");
+        }
+
         img.onload = () => { done++; if (done === count) layoutFG(); };
         fgImages.push(img);
         container.insertBefore(img, container.querySelector(".overlay"));
