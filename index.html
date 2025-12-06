@@ -43,40 +43,11 @@
       transform-origin: 50% 100%;
       transform: translateZ(0);
     }
-
-    /* Algas del fondo desenfocadas */
-    .alga-bg {
-      z-index: 0;
-      object-fit: contain;
-      /* Fade en el último 20% inferior (se ve más fondo azul) */
-      -webkit-mask-image: linear-gradient(
-        to top,
-        rgba(0,0,0,0) 0%,
-        rgba(0,0,0,1) 20%
-      );
-      mask-image: linear-gradient(
-        to top,
-        rgba(0,0,0,0) 0%,
-        rgba(0,0,0,1) 20%
-      );
-    }
-
-    /* Algas delanteras */
+    .alga-bg { z-index: 0; }
     .alga-fg {
       z-index: 1;
       filter: saturate(.95);
       animation: corrientePuppet 12s ease-in-out infinite;
-      /* Fade en el último ~10–12% inferior (entre 5–15%) */
-      -webkit-mask-image: linear-gradient(
-        to top,
-        rgba(0,0,0,0) 0%,
-        rgba(0,0,0,1) 12%
-      );
-      mask-image: linear-gradient(
-        to top,
-        rgba(0,0,0,0) 0%,
-        rgba(0,0,0,1) 12%
-      );
     }
 
     @keyframes corrientePuppet {
@@ -245,7 +216,7 @@
       backdrop-filter: blur(10px);
       box-shadow: 0 0 25px rgba(0,0,0,0.8);
       opacity: 0.85;
-      transition: opacity 0.2s ease;
+      transition: opacity 0.2s ease, transform 0.2s ease;
       z-index: 30;
       touch-action: none;
       user-select: none;
@@ -333,48 +304,29 @@
       animation: ringColorShift 12s ease-in-out infinite;
     }
 
-    /* ANIMACIÓN ESCALONADA TÍTULO / SUBTÍTULO / BOTONES */
-    @keyframes fadeDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    /* NIEBLA INFERIOR AZUL PROFUNDO */
+    .bottom-fog {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 8vh;
+      pointer-events: none;
+      z-index: 20;
+      background: linear-gradient(
+        to top,
+        rgba(3,18,40,1) 0%,
+        rgba(3,18,40,1) 37%,
+        rgba(3,18,40,0) 100%
+      );
     }
 
+    /* ESTADO INICIAL PARA EFECTO ESCALONADO (JS SE ENCARGA DEL FADE) */
     .center-block .name,
     .center-block .subtitle,
     .center-block .nav-button {
       opacity: 0;
       transform: translateY(-10px);
-    }
-
-    .sea-container.visible .center-block .name {
-      animation: fadeDown 0.65s ease-out forwards;
-      animation-delay: 0.15s;
-    }
-    .sea-container.visible .center-block .subtitle {
-      animation: fadeDown 0.65s ease-out forwards;
-      animation-delay: 0.30s;
-    }
-    .sea-container.visible .center-block .nav-button:nth-child(1) {
-      animation: fadeDown 0.55s ease-out forwards;
-      animation-delay: 0.48s;
-    }
-    .sea-container.visible .center-block .nav-button:nth-child(2) {
-      animation: fadeDown 0.55s ease-out forwards;
-      animation-delay: 0.60s;
-    }
-    .sea-container.visible .center-block .nav-button:nth-child(3) {
-      animation: fadeDown 0.55s ease-out forwards;
-      animation-delay: 0.72s;
-    }
-    .sea-container.visible .center-block .nav-button:nth-child(4) {
-      animation: fadeDown 0.55s ease-out forwards;
-      animation-delay: 0.84s;
     }
   </style>
 </head>
@@ -412,8 +364,14 @@
     <img src="sonido/icono.png" alt="Audio marino" draggable="false">
   </div>
 
+  <!-- NIEBLA INFERIOR -->
+  <div class="bottom-fog"></div>
+
   <!-- SCRIPT FONDO MARINO -->
   <script>
+  (function () {
+    "use strict";
+
     const algaeSources = [
       "algas/algas 1.png","algas/algas 2.png","algas/algas 3.png",
       "algas/algas 4.png","algas/algas 5.png"
@@ -421,37 +379,62 @@
 
     const container = document.getElementById("sea-container");
     const particlesContainer = document.getElementById("particles-layer");
-    let bgImages = [], fgImages = [];
-    let bgReady = false, fgReady = false, revealed = false;
 
-    const random = (a,b) => a + Math.random()*(b-a);
+    let bgImages = [];
+    let fgImages = [];
+    let bgReady = false;
+    let fgReady = false;
+    let revealed = false;
 
-    function getVH() {
-      return window.innerHeight || document.documentElement.clientHeight || screen.height;
-    }
-    function getVW() {
-      return window.innerWidth || document.documentElement.clientWidth || screen.width;
-    }
-    function isPortrait() {
-      return getVH() > getVW();
+    const random = (a, b) => a + Math.random() * (b - a);
+
+    const getVH = () =>
+      window.innerHeight || document.documentElement.clientHeight || screen.height;
+    const getVW = () =>
+      window.innerWidth || document.documentElement.clientWidth || screen.width;
+
+    const isPortrait = () => getVH() > getVW();
+
+    // NUEVO: escalonado del título/subtítulo/botones con JS (igual en PC y iPad)
+    function startTextStagger() {
+      const nameEl = container.querySelector(".name");
+      const subtitleEl = container.querySelector(".subtitle");
+      const buttons = container.querySelectorAll(".nav-button");
+
+      if (!nameEl || !subtitleEl || !buttons.length) return;
+
+      const elements = [nameEl, subtitleEl, ...buttons];
+
+      elements.forEach(el => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(-10px)";
+      });
+
+      const baseDelay = 150; // ms
+      const step = 120;      // ms entre cada uno
+
+      elements.forEach((el, index) => {
+        setTimeout(() => {
+          el.style.transition = "opacity 0.55s ease-out, transform 0.55s ease-out";
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+        }, baseDelay + index * step);
+      });
     }
 
     function tryReveal() {
       if (bgReady && fgReady && !revealed) {
         revealed = true;
         container.classList.add("visible");
+        startTextStagger();
       }
     }
 
-    /* helper: elegir PNG sin formar racimos del mismo archivo */
+    // Evita que se repitan demasiado los mismos PNG
     function pickAlgaSrcNoCluster(prev1, prev2) {
       let candidates = algaeSources.filter(s => s !== prev1 && s !== prev2);
-      if (!candidates.length) {
-        candidates = algaeSources.filter(s => s !== prev1);
-      }
-      if (!candidates.length) {
-        candidates = algaeSources.slice();
-      }
+      if (!candidates.length) candidates = algaeSources.filter(s => s !== prev1);
+      if (!candidates.length) candidates = algaeSources.slice();
       return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
@@ -459,23 +442,19 @@
       container.querySelectorAll("img.alga").forEach(e => e.remove());
       bgImages = [];
       fgImages = [];
-      bgReady = fgReady = revealed = false;
+      bgReady = false;
+      fgReady = false;
+      revealed = false;
       container.classList.remove("visible");
       loadBG();
       loadFG();
     }
 
-    /* FONDO (ALGAS DESENFOCADAS, CANTIDAD SEGÚN ORIENTACIÓN) */
+    /* FONDO (ALGAS DESENFOCADAS, MENOS CANTIDAD Y SIN CORTARSE EN X) */
     function loadBG() {
-      let baseCount;
-      if (isPortrait()) {
-        // Pantalla vertical: 2–3 algas de fondo
-        baseCount = Math.floor(random(2, 3.99));
-      } else {
-        // Pantalla horizontal: 3–5 algas de fondo
-        baseCount = Math.floor(random(3, 5.99));
-      }
-      const count = Math.max(2, baseCount);
+      const baseCount = Math.floor(random(5, 9)); // antes 10–18
+      const factor = isPortrait() ? 0.5 : 1;
+      const count = Math.max(3, Math.round(baseCount * factor));
 
       let done = 0;
       bgImages = [];
@@ -492,10 +471,15 @@
         prev2 = prev1;
         prev1 = src;
 
-        img.style.opacity = random(.22,.40);
-        img.style.filter  = `blur(${random(1.2,3.2)}px) saturate(.8)`;
+        img.style.opacity = random(.22, .40);
+        img.style.filter = `blur(${random(1.2, 3.2)}px) saturate(.8)`;
         if (Math.random() < .5) img.style.transform = "scaleX(-1)";
-        img.onload = () => { done++; if (done === count) layoutBG(); };
+
+        img.onload = () => {
+          done++;
+          if (done === count) layoutBG();
+        };
+
         bgImages.push(img);
         container.insertBefore(img, container.firstChild);
       }
@@ -508,9 +492,9 @@
       const vw = getVW();
 
       const totalHeight = vh;
-      const topOffset   = 0;
+      const topOffset = 0;
 
-      const marginLeft  = vw * 0.03;
+      const marginLeft = vw * 0.03;
       const marginRight = vw * 0.03;
 
       const n = bgImages.length;
@@ -519,20 +503,21 @@
 
       bgImages.forEach((img, index) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        let width   = totalHeight * ratio;
+        let width = totalHeight * ratio;
         const maxWidth = vw * 0.35;
         if (width > maxWidth) width = maxWidth;
 
         let center = (index + 1) * segmentWidth;
-        let left   = center - width / 2;
+        let left = center - width / 2;
 
+        // clamp para que nunca se corten en X
         if (left < marginLeft) left = marginLeft;
         if (left + width > vw - marginRight) left = vw - marginRight - width;
 
         img.style.height = totalHeight + "px";
-        img.style.width  = width + "px";
-        img.style.top    = topOffset + "px";
-        img.style.left   = left + "px";
+        img.style.width = width + "px";
+        img.style.top = topOffset + "px";
+        img.style.left = left + "px";
       });
 
       bgReady = true;
@@ -541,7 +526,7 @@
 
     /* FRENTE (ALGAS DELANTERAS) */
     function loadFG() {
-      const baseCount = Math.floor(random(7,12));
+      const baseCount = Math.floor(random(7, 12));
       const factor = isPortrait() ? 0.5 : 1;
       const count = Math.max(3, Math.round(baseCount * factor));
 
@@ -560,9 +545,14 @@
         prev2 = prev1;
         prev1 = src;
 
-        img.style.opacity = random(.50,.78);
+        img.style.opacity = random(.50, .78);
         if (Math.random() < .5) img.style.transform = "scaleX(-1)";
-        img.onload = () => { done++; if (done === count) layoutFG(); };
+
+        img.onload = () => {
+          done++;
+          if (done === count) layoutFG();
+        };
+
         fgImages.push(img);
         container.insertBefore(img, container.querySelector(".overlay"));
       }
@@ -574,22 +564,22 @@
       const vh = getVH();
       const vw = getVW();
 
-      const totalHeight   = vh;
-      const topOffset     = 0;
-      const segments      = fgImages.length - 1 || 1;
-      const segmentWidth  = vw / segments;
+      const totalHeight = vh;
+      const topOffset = 0;
+      const segments = fgImages.length - 1 || 1;
+      const segmentWidth = vw / segments;
 
       fgImages.forEach((img, i) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
         const width = totalHeight * ratio * 1.05;
 
         const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
-        const left   = center - width / 2;
+        const left = center - width / 2;
 
         img.style.height = totalHeight + "px";
-        img.style.width  = width + "px";
-        img.style.top    = topOffset + "px";
-        img.style.left   = left + "px";
+        img.style.width = width + "px";
+        img.style.top = topOffset + "px";
+        img.style.left = left + "px";
       });
 
       fgReady = true;
@@ -615,7 +605,7 @@
 
         const w = random(2, 10);
         const h = random(2, 10);
-        p.style.width  = w + "px";
+        p.style.width = w + "px";
         p.style.height = h + "px";
 
         const r1 = random(40, 90);
@@ -631,40 +621,42 @@
         }
 
         p.style.left = random(0, 100) + "vw";
-        p.style.top  = random(0, 100) + "vh";
+        p.style.top = random(0, 100) + "vh";
 
-        p.style.setProperty("--driftX",  random(3, 10) + "vw");
-        p.style.setProperty("--ampY",   random(-8, 8) + "px");
+        p.style.setProperty("--driftX", random(3, 10) + "vw");
+        p.style.setProperty("--ampY", random(-8, 8) + "px");
 
         p.style.animationDuration = random(14, 30) + "s";
-        p.style.animationDelay    = random(-25, 0) + "s";
+        p.style.animationDelay = random(-25, 0) + "s";
 
         particlesContainer.appendChild(p);
       }
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
+    function relayoutScene() {
+      layoutBG();
+      layoutFG();
+      createParticles();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
       createSea();
       createParticles();
     });
 
-    window.addEventListener("resize", () => {
-      layoutBG();
-      layoutFG();
-      createParticles();
-    });
+    window.addEventListener("resize", relayoutScene);
 
     window.addEventListener("orientationchange", () => {
-      setTimeout(() => {
-        layoutBG();
-        layoutFG();
-        createParticles();
-      }, 300);
+      setTimeout(relayoutScene, 300);
     });
+  })();
   </script>
 
   <!-- SCRIPT DEL SONIDO -->
   <script>
+  (function () {
+    "use strict";
+
     let audioCtx = null;
     let masterGain = null;
     let filter = null;
@@ -684,15 +676,15 @@
     let noiseTimeoutId = null;
 
     const bassRoot = 55;
-    const pentatonicSteps = [0,2,4,7,9];
+    const pentatonicSteps = [0, 2, 4, 7, 9];
 
     const speakerIcon = document.getElementById("speakerIcon");
     const ringCircle = document.getElementById("ringCircle");
     let ringLength = 0;
 
     function randomPentatonicFreq() {
-      const semis = 24 + pentatonicSteps[Math.floor(Math.random()*pentatonicSteps.length)];
-      return bassRoot * Math.pow(2, semis/12);
+      const semis = 24 + pentatonicSteps[Math.floor(Math.random() * pentatonicSteps.length)];
+      return bassRoot * Math.pow(2, semis / 12);
     }
 
     /* FADE SUAVE GENERAL */
@@ -729,7 +721,7 @@
     }
 
     function createBassLayer() {
-      [bassRoot, bassRoot*1.2].forEach((f,i)=>{
+      [bassRoot, bassRoot * 1.2].forEach((f, i) => {
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
 
@@ -740,17 +732,22 @@
         osc.connect(g);
         g.connect(filter);
 
-        g.gain.linearRampToValueAtTime(0.12 + i*0.03, audioCtx.currentTime + 5 + i*1.5);
+        g.gain.linearRampToValueAtTime(
+          0.12 + i * 0.03,
+          audioCtx.currentTime + 5 + i * 1.5
+        );
         osc.start();
       });
     }
 
     function spawnPadNote() {
-      if(!audioCtx) return;
-      const base = [196,220,246.94,261.63,293.66][Math.floor(Math.random()*5)];
+      if (!audioCtx) return;
+      const bases = [196, 220, 246.94, 261.63, 293.66];
+      const base = bases[Math.floor(Math.random() * bases.length)];
+
       const osc = audioCtx.createOscillator();
       const g = audioCtx.createGain();
-      osc.type = Math.random()<0.5 ? "sine":"triangle";
+      osc.type = Math.random() < 0.5 ? "sine" : "triangle";
       osc.frequency.value = base;
 
       g.gain.value = 0;
@@ -758,33 +755,33 @@
       g.connect(filter);
 
       const now = audioCtx.currentTime;
-      const total = 1.4 + Math.random()*1.4;
-      const fin = 0.3 + Math.random()*0.5;
-      const fout = 0.4 + Math.random()*0.8;
-      const sus = Math.max(0.2,total-fin-fout);
-      const peak = 0.06 + Math.random()*0.05;
+      const total = 1.4 + Math.random() * 1.4;
+      const fin = 0.3 + Math.random() * 0.5;
+      const fout = 0.4 + Math.random() * 0.8;
+      const sus = Math.max(0.2, total - fin - fout);
+      const peak = 0.06 + Math.random() * 0.05;
 
-      g.gain.linearRampToValueAtTime(peak, now+fin);
-      g.gain.linearRampToValueAtTime(peak, now+fin+sus);
-      g.gain.linearRampToValueAtTime(0, now+total);
+      g.gain.linearRampToValueAtTime(peak, now + fin);
+      g.gain.linearRampToValueAtTime(peak, now + fin + sus);
+      g.gain.linearRampToValueAtTime(0, now + total);
 
       osc.start();
-      osc.stop(now+total+0.2);
+      osc.stop(now + total + 0.2);
     }
 
-    function scheduleNextPad(){
-      if(!running || !audioCtx) return;
+    function scheduleNextPad() {
+      if (!running || !audioCtx) return;
       spawnPadNote();
-      padTimeoutId = setTimeout(scheduleNextPad, 500+Math.random()*2000);
+      padTimeoutId = setTimeout(scheduleNextPad, 500 + Math.random() * 2000);
     }
 
-    function startPadLoop(){
-      setTimeout(()=>{
-        if(running) scheduleNextPad();
-      },800);
+    function startPadLoop() {
+      setTimeout(() => {
+        if (running) scheduleNextPad();
+      }, 800);
     }
 
-    function createLeadVoice(){
+    function createLeadVoice() {
       leadOsc = audioCtx.createOscillator();
       leadGain = audioCtx.createGain();
       leadOsc.type = "triangle";
@@ -794,27 +791,29 @@
       leadOsc.connect(leadGain);
       leadGain.connect(filter);
 
-      leadGain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime+3);
+      leadGain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime + 3);
       leadOsc.start();
       scheduleNextLeadStep();
     }
 
-    function scheduleNextLeadStep(){
-      if(!running || !audioCtx) return;
+    function scheduleNextLeadStep() {
+      if (!running || !audioCtx) return;
       const now = audioCtx.currentTime;
       leadOsc.frequency.setValueAtTime(randomPentatonicFreq(), now);
 
-      const dur = 0.8 + Math.random()*2;
-      const newGain = 0.02 + Math.random()*0.02;
-      leadGain.gain.linearRampToValueAtTime(newGain, now + dur*0.5);
+      const dur = 0.8 + Math.random() * 2;
+      const newGain = 0.02 + Math.random() * 0.02;
+      leadGain.gain.linearRampToValueAtTime(newGain, now + dur * 0.5);
 
-      leadTimeoutId = setTimeout(scheduleNextLeadStep, dur*1000);
+      leadTimeoutId = setTimeout(scheduleNextLeadStep, dur * 1000);
     }
 
-    function createNoiseLayer(){
-      const buf = audioCtx.createBuffer(1, 2*audioCtx.sampleRate, audioCtx.sampleRate);
+    function createNoiseLayer() {
+      const buf = audioCtx.createBuffer(1, 2 * audioCtx.sampleRate, audioCtx.sampleRate);
       const data = buf.getChannelData(0);
-      for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.5;
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.5;
+      }
 
       noiseSource = audioCtx.createBufferSource();
       noiseSource.buffer = buf;
@@ -833,31 +832,31 @@
 
       noiseSource.start();
 
-      /* ruido tipo televisor antiguo al ~60% del valor anterior */
-      noiseGain.gain.linearRampToValueAtTime(0.024, audioCtx.currentTime+3);
+      // ruido tipo televisor antiguo al ~60% del valor anterior
+      noiseGain.gain.linearRampToValueAtTime(0.024, audioCtx.currentTime + 3);
       scheduleNextNoiseMod();
     }
 
-    function scheduleNextNoiseMod(){
-      if(!running || !audioCtx) return;
+    function scheduleNextNoiseMod() {
+      if (!running || !audioCtx) return;
       const now = audioCtx.currentTime;
-      const t = 2 + Math.random()*3;
-      const base = 0.02 + Math.random()*0.05;
+      const t = 2 + Math.random() * 3;
+      const base = 0.02 + Math.random() * 0.05;
       const g = base * 0.6;
 
-      noiseGain.gain.linearRampToValueAtTime(g, now+t);
-      noiseTimeoutId = setTimeout(scheduleNextNoiseMod, t*1000);
+      noiseGain.gain.linearRampToValueAtTime(g, now + t);
+      noiseTimeoutId = setTimeout(scheduleNextNoiseMod, t * 1000);
     }
 
-    function startSea(){
-      if(running) return;
+    function startSea() {
+      if (running) return;
       running = true;
       speakerIcon.classList.remove("muted");
       speakerIcon.classList.add("active");
 
-      if(!audioCtx || audioCtx.state==="closed"){
+      if (!audioCtx || audioCtx.state === "closed") {
         createContext();
-      } else if(audioCtx.state==="suspended"){
+      } else if (audioCtx.state === "suspended") {
         audioCtx.resume();
         smoothFadeTo(userVolume, 2.0);
       } else {
@@ -865,8 +864,8 @@
       }
     }
 
-    function stopSea(){
-      if(!running || !audioCtx) return;
+    function stopSea() {
+      if (!running || !audioCtx) return;
       running = false;
 
       speakerIcon.classList.add("muted");
@@ -874,81 +873,86 @@
 
       smoothFadeTo(0, 2.8);
 
-      if(padTimeoutId){clearTimeout(padTimeoutId); padTimeoutId=null;}
-      if(leadTimeoutId){clearTimeout(leadTimeoutId); leadTimeoutId=null;}
-      if(noiseTimeoutId){clearTimeout(noiseTimeoutId); noiseTimeoutId=null;}
+      if (padTimeoutId) { clearTimeout(padTimeoutId); padTimeoutId = null; }
+      if (leadTimeoutId) { clearTimeout(leadTimeoutId); leadTimeoutId = null; }
+      if (noiseTimeoutId) { clearTimeout(noiseTimeoutId); noiseTimeoutId = null; }
 
-      setTimeout(()=>{
-        if(audioCtx){
+      setTimeout(() => {
+        if (audioCtx) {
           audioCtx.close();
-          audioCtx=null;
+          audioCtx = null;
         }
       }, 3200);
     }
 
-    function initRing(){
+    function initRing() {
       const r = parseFloat(ringCircle.getAttribute("r"));
       ringLength = 2 * Math.PI * r;
       ringCircle.style.strokeDasharray = ringLength;
       updateVolumeVisual();
     }
 
-    function updateVolumeVisual(){
+    function updateVolumeVisual() {
       let ratio = (userVolume - MIN_VOL) / (MAX_VOL - MIN_VOL);
-      ratio = Math.max(0,Math.min(1,ratio));
-      ringCircle.style.strokeDashoffset = ringLength * (1-ratio);
+      ratio = Math.max(0, Math.min(1, ratio));
+      ringCircle.style.strokeDashoffset = ringLength * (1 - ratio);
     }
 
-    function applyVolumeChange(){
-      if(!audioCtx||!masterGain) return;
+    function applyVolumeChange() {
+      if (!audioCtx || !masterGain) return;
       smoothFadeTo(userVolume, 0.2);
       updateVolumeVisual();
     }
 
-    let dragging=false;
-    let lastY=0;
-    let moved=false;
-    let activePointerId=null;
+    // CONTROL DEL VOLUMEN CON POINTER (evita arrastrar el icono como imagen)
+    let dragging = false;
+    let lastY = 0;
+    let moved = false;
+    let activePointerId = null;
 
     speakerIcon.addEventListener("dragstart", e => e.preventDefault());
 
-    speakerIcon.addEventListener("pointerdown", e=>{
+    speakerIcon.addEventListener("pointerdown", e => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
       e.preventDefault();
-      dragging=true;
-      moved=false;
-      lastY=e.clientY;
-      activePointerId=e.pointerId;
+      dragging = true;
+      moved = false;
+      lastY = e.clientY;
+      activePointerId = e.pointerId;
       speakerIcon.setPointerCapture(e.pointerId);
     });
 
-    speakerIcon.addEventListener("pointermove", e=>{
-      if(!dragging || e.pointerId !== activePointerId) return;
+    speakerIcon.addEventListener("pointermove", e => {
+      if (!dragging || e.pointerId !== activePointerId) return;
 
       if (e.pointerType === "mouse" && !(e.buttons & 1)) {
-        dragging=false;
+        dragging = false;
         speakerIcon.releasePointerCapture(activePointerId);
-        activePointerId=null;
+        activePointerId = null;
         return;
       }
 
-      const dy=e.clientY-lastY;
-      if(Math.abs(dy)>2) moved=true;
-      lastY=e.clientY;
+      const dy = e.clientY - lastY;
+      if (Math.abs(dy) > 2) moved = true;
+      lastY = e.clientY;
 
-      userVolume = Math.max(MIN_VOL, Math.min(MAX_VOL, userVolume - dy*0.002));
+      userVolume = Math.max(
+        MIN_VOL,
+        Math.min(MAX_VOL, userVolume - dy * 0.002)
+      );
       applyVolumeChange();
     });
 
-    function endPointer(e){
-      if(!dragging || !activePointerId || e.pointerId !== activePointerId) return;
+    function endPointer(e) {
+      if (!dragging || !activePointerId || e.pointerId !== activePointerId) return;
       e.preventDefault();
-      dragging=false;
+      dragging = false;
       speakerIcon.releasePointerCapture(e.pointerId);
-      activePointerId=null;
+      activePointerId = null;
 
-      if(!moved){
-        if(running) stopSea();
+      // Si no se movió, es un "tap": alterna play/stop
+      if (!moved) {
+        if (running) stopSea();
         else startSea();
       }
     }
@@ -956,9 +960,10 @@
     speakerIcon.addEventListener("pointerup", endPointer);
     speakerIcon.addEventListener("pointercancel", endPointer);
 
-    window.addEventListener("load", ()=>{
+    window.addEventListener("load", () => {
       initRing();
     });
+  })();
   </script>
 </body>
 </html>
