@@ -199,11 +199,11 @@
       position: fixed;
       bottom: 40px;
       right: 40px;
-      width: min(6.51vw, 6.51vh);     /* antes 7vw/7vh */
+      width: min(6.51vw, 6.51vh);
       height: min(6.51vw, 6.51vh);
-      min-width: 39px;                /* 42 * 0.93 ≈ 39 */
+      min-width: 39px;
       min-height: 39px;
-      max-width: 74px;                /* 80 * 0.93 ≈ 74 */
+      max-width: 74px;
       max-height: 74px;
       border-radius: 50%;
       display: flex;
@@ -214,7 +214,7 @@
       box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
       opacity: 0.85;
       transition: opacity 0.2s ease;
-      z-index: 30;          /* SIEMPRE POR ENCIMA DE LA NIEBLA */
+      z-index: 30;
       touch-action: none;
       user-select: none;
       -webkit-user-drag: none;
@@ -228,7 +228,7 @@
       transform: scale(0.95);
     }
 
-    /* TINTINEO CON FADE ELEGANTE CUANDO ESTÁ EN MUTE */
+    /* Tintineo con fade elegante */
     @keyframes attentionBlink {
       0%   { opacity: 0.55; }
       8%   { opacity: 1.0; }
@@ -282,7 +282,7 @@
 
     .ring {
       position: absolute;
-      inset: -28%;   /* antes -30%, anillo algo más pequeño */
+      inset: -28%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -318,7 +318,7 @@
       animation: ringColorShift 12s ease-in-out infinite;
     }
 
-    /* NIEBLA NEGRA INFERIOR SOBRE TODAS LAS CAPAS (menos el icono) */
+    /* NIEBLA INFERIOR CON COLOR DEL FONDO (no negro puro) */
     .bottom-fog {
       position: fixed;
       left: 0;
@@ -329,9 +329,9 @@
       z-index: 20;
       background: linear-gradient(
         to top,
-        rgba(0, 0, 0, 1) 0%,
-        rgba(0, 0, 0, 1) 37.5%,
-        rgba(0, 0, 0, 0) 100%
+        rgba(2, 11, 13, 1) 0%,      /* mismo tono que el fondo al final (#020b0d aprox) */
+        rgba(2, 11, 13, 1) 37.5%,
+        rgba(2, 11, 13, 0) 100%
       );
     }
 
@@ -413,13 +413,13 @@
   <div id="speakerIcon" class="muted">
     <div class="ring">
       <svg viewBox="0 0 60 60">
-        <circle id="ringCircle" cx="30" cy="30" r="24"></circle> <!-- antes 26, círculo un poco más chico -->
+        <circle id="ringCircle" cx="30" cy="30" r="24"></circle>
       </svg>
     </div>
     <img src="sonido/icono.png" alt="Audio marino" draggable="false">
   </div>
 
-  <!-- NIEBLA NEGRA INFERIOR -->
+  <!-- NIEBLA INFERIOR -->
   <div class="bottom-fog"></div>
 
   <!-- SCRIPT FONDO MARINO -->
@@ -466,7 +466,7 @@
     /* FONDO (ALGAS DESENFOCADAS) */
     function loadBG() {
       const baseCount = Math.floor(random(10,18));
-      const factor = isPortrait() ? 0.5 : 1;              // mitad en vertical
+      const factor = isPortrait() ? 0.5 : 1;
       const count = Math.max(3, Math.round(baseCount * factor));
 
       let done = 0;
@@ -522,7 +522,7 @@
     /* FRENTE (ALGAS DELANTERAS) */
     function loadFG() {
       const baseCount = Math.floor(random(7,12));
-      const factor = isPortrait() ? 0.5 : 1;              // mitad en vertical
+      const factor = isPortrait() ? 0.5 : 1;
       const count = Math.max(3, Math.round(baseCount * factor));
 
       let done = 0;
@@ -813,7 +813,8 @@
 
       noiseSource.start();
 
-      noiseGain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime+3);
+      /* volumen base del ruido tipo televisor al 60% de lo que era */
+      noiseGain.gain.linearRampToValueAtTime(0.024, audioCtx.currentTime+3); // antes 0.04
       scheduleNextNoiseMod();
     }
 
@@ -821,7 +822,9 @@
       if(!running||!audioCtx) return;
       let now = audioCtx.currentTime;
       let t = 2 + Math.random()*3;
-      let g = 0.02 + Math.random()*0.05;
+
+      /* antes: 0.02 + Math.random()*0.05 → ahora al 60% */
+      let g = (0.02 + Math.random()*0.05) * 0.6;
 
       noiseGain.gain.linearRampToValueAtTime(g, now+t);
       noiseTimeoutId = setTimeout(scheduleNextNoiseMod, t*1000);
@@ -837,7 +840,7 @@
         createContext();
       } else if(audioCtx.state==="suspended"){
         audioCtx.resume();
-        smoothFadeTo(userVolume, 2.0);  // fade-in suave al volver a encender
+        smoothFadeTo(userVolume, 2.0);
       } else {
         smoothFadeTo(userVolume, 2.0);
       }
@@ -850,7 +853,7 @@
       speakerIcon.classList.add("muted");
       speakerIcon.classList.remove("active");
 
-      smoothFadeTo(0, 2.8);   // FADE OUT ELEGANTE AL APAGAR
+      smoothFadeTo(0, 2.8);   // fade out elegante
 
       if(padTimeoutId){clearTimeout(padTimeoutId); padTimeoutId=null;}
       if(leadTimeoutId){clearTimeout(leadTimeoutId); leadTimeoutId=null;}
