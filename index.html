@@ -82,7 +82,7 @@
       font-size: .85rem;
       letter-spacing: .24em;
       color: #a5f3fc;
-      margin-bottom: 1.3rem; /* MÁS SEPARACIÓN DEL BLOQUE DE BOTONES */
+      margin-bottom: 1.3rem; /* más separación del bloque de botones */
       text-transform: uppercase;
     }
 
@@ -194,20 +194,17 @@
       }
     }
 
-    /* =====================================================
-       ICONO DE SONIDO
-       ===================================================== */
-
+    /* ICONO DE SONIDO — 7% MÁS PEQUEÑO */
     #speakerIcon {
       position: fixed;
       bottom: 40px;
       right: 40px;
-      width: min(7vw, 7vh);
-      height: min(7vw, 7vh);
-      min-width: 42px;
-      min-height: 42px;
-      max-width: 80px;
-      max-height: 80px;
+      width: min(6.51vw, 6.51vh);     /* antes 7vw/7vh */
+      height: min(6.51vw, 6.51vh);
+      min-width: 39px;                /* 42 * 0.93 ≈ 39 */
+      min-height: 39px;
+      max-width: 74px;                /* 80 * 0.93 ≈ 74 */
+      max-height: 74px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -217,7 +214,7 @@
       box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
       opacity: 0.85;
       transition: opacity 0.2s ease;
-      z-index: 30;
+      z-index: 30;          /* SIEMPRE POR ENCIMA DE LA NIEBLA */
       touch-action: none;
       user-select: none;
       -webkit-user-drag: none;
@@ -231,14 +228,15 @@
       transform: scale(0.95);
     }
 
+    /* TINTINEO CON FADE ELEGANTE CUANDO ESTÁ EN MUTE */
     @keyframes attentionBlink {
-      0%, 5%   { opacity: 0.55; }
-      6%       { opacity: 1; }
-      8%       { opacity: 0.4; }
-      9%       { opacity: 1; }
-      11%      { opacity: 0.4; }
-      12%      { opacity: 1; }
-      100%     { opacity: 0.6; }
+      0%   { opacity: 0.55; }
+      8%   { opacity: 1.0; }
+      16%  { opacity: 0.35; }
+      24%  { opacity: 1.0; }
+      32%  { opacity: 0.35; }
+      40%  { opacity: 1.0; }
+      100% { opacity: 0.55; }
     }
 
     #speakerIcon.muted {
@@ -284,7 +282,7 @@
 
     .ring {
       position: absolute;
-      inset: -30%;
+      inset: -28%;   /* antes -30%, anillo algo más pequeño */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -320,9 +318,7 @@
       animation: ringColorShift 12s ease-in-out infinite;
     }
 
-    /* =====================================================
-       NIEBLA NEGRA INFERIOR SOBRE TODAS LAS CAPAS
-       ===================================================== */
+    /* NIEBLA NEGRA INFERIOR SOBRE TODAS LAS CAPAS (menos el icono) */
     .bottom-fog {
       position: fixed;
       left: 0;
@@ -339,9 +335,7 @@
       );
     }
 
-    /* =====================================================
-       ANIMACIÓN ESCALONADA TÍTULO / SUBTÍTULO / BOTONES
-       ===================================================== */
+    /* ANIMACIÓN ESCALONADA TÍTULO / SUBTÍTULO / BOTONES */
     @keyframes fadeDown {
       from {
         opacity: 0;
@@ -353,7 +347,6 @@
       }
     }
 
-    /* Estado inicial: invisibles y un poco más arriba */
     .center-block .name,
     .center-block .subtitle,
     .center-block .nav-button {
@@ -361,7 +354,6 @@
       transform: translateY(-10px);
     }
 
-    /* Cuando el mar ya está visible, se disparan animaciones escalonadas */
     .sea-container.visible .center-block .name {
       animation: fadeDown 0.65s ease-out forwards;
       animation-delay: 0.15s;
@@ -421,7 +413,7 @@
   <div id="speakerIcon" class="muted">
     <div class="ring">
       <svg viewBox="0 0 60 60">
-        <circle id="ringCircle" cx="30" cy="30" r="26"></circle>
+        <circle id="ringCircle" cx="30" cy="30" r="24"></circle> <!-- antes 26, círculo un poco más chico -->
       </svg>
     </div>
     <img src="sonido/icono.png" alt="Audio marino" draggable="false">
@@ -430,7 +422,7 @@
   <!-- NIEBLA NEGRA INFERIOR -->
   <div class="bottom-fog"></div>
 
-  <!-- SCRIPT ORIGINAL DEL FONDO MARINO -->
+  <!-- SCRIPT FONDO MARINO -->
   <script>
     const algaeSources = [
       "algas/algas 1.png","algas/algas 2.png","algas/algas 3.png",
@@ -450,6 +442,9 @@
     function getVW() {
       return window.innerWidth || document.documentElement.clientWidth || screen.width;
     }
+    function isPortrait() {
+      return getVH() > getVW();
+    }
 
     function tryReveal() {
       if (bgReady && fgReady && !revealed) {
@@ -468,10 +463,14 @@
       loadFG();
     }
 
-    /* ---------- FONDO ---------- */
+    /* FONDO (ALGAS DESENFOCADAS) */
     function loadBG() {
-      const count = Math.floor(random(10,18));
+      const baseCount = Math.floor(random(10,18));
+      const factor = isPortrait() ? 0.5 : 1;              // mitad en vertical
+      const count = Math.max(3, Math.round(baseCount * factor));
+
       let done = 0;
+      bgImages = [];
 
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
@@ -520,10 +519,14 @@
       tryReveal();
     }
 
-    /* ---------- FRENTE ---------- */
+    /* FRENTE (ALGAS DELANTERAS) */
     function loadFG() {
-      const count = Math.floor(random(7,12));
+      const baseCount = Math.floor(random(7,12));
+      const factor = isPortrait() ? 0.5 : 1;              // mitad en vertical
+      const count = Math.max(3, Math.round(baseCount * factor));
+
       let done = 0;
+      fgImages = [];
 
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
@@ -565,7 +568,7 @@
       tryReveal();
     }
 
-    /* ---------- PARTÍCULAS ---------- */
+    /* PARTÍCULAS */
     function createParticles() {
       particlesContainer.innerHTML = "";
 
@@ -668,6 +671,17 @@
       return bassRoot * Math.pow(2, semis/12);
     }
 
+    /* FADE SUAVE GENERAL */
+    function smoothFadeTo(targetValue, durationSeconds) {
+      if (!audioCtx || !masterGain) return;
+      const now = audioCtx.currentTime;
+      const current = masterGain.gain.value;
+
+      masterGain.gain.cancelScheduledValues(now);
+      masterGain.gain.setValueAtTime(current, now);
+      masterGain.gain.linearRampToValueAtTime(targetValue, now + durationSeconds);
+    }
+
     function createContext() {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -687,7 +701,7 @@
       createLeadVoice();
       createNoiseLayer();
 
-      masterGain.gain.linearRampToValueAtTime(userVolume, audioCtx.currentTime + 3);
+      smoothFadeTo(userVolume, 2.5);   // fade-in suave al iniciar
     }
 
     function createBassLayer() {
@@ -823,9 +837,10 @@
         createContext();
       } else if(audioCtx.state==="suspended"){
         audioCtx.resume();
+        smoothFadeTo(userVolume, 2.0);  // fade-in suave al volver a encender
+      } else {
+        smoothFadeTo(userVolume, 2.0);
       }
-
-      masterGain.gain.linearRampToValueAtTime(userVolume, audioCtx.currentTime+2);
     }
 
     function stopSea(){
@@ -835,7 +850,7 @@
       speakerIcon.classList.add("muted");
       speakerIcon.classList.remove("active");
 
-      masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime+3);
+      smoothFadeTo(0, 2.8);   // FADE OUT ELEGANTE AL APAGAR
 
       if(padTimeoutId){clearTimeout(padTimeoutId); padTimeoutId=null;}
       if(leadTimeoutId){clearTimeout(leadTimeoutId); leadTimeoutId=null;}
@@ -846,7 +861,7 @@
           audioCtx.close();
           audioCtx=null;
         }
-      },3500);
+      }, 3200);
     }
 
     function initRing(){
@@ -864,7 +879,7 @@
 
     function applyVolumeChange(){
       if(!audioCtx||!masterGain) return;
-      masterGain.gain.linearRampToValueAtTime(userVolume, audioCtx.currentTime+0.15);
+      smoothFadeTo(userVolume, 0.2);
       updateVolumeVisual();
     }
 
@@ -904,7 +919,7 @@
     });
 
     function endPointer(e){
-      if(!dragging || e.pointerId !== activePointerId) return;
+      if(!dragging || !activePointerId || e.pointerId !== activePointerId) return;
       e.preventDefault();
       dragging=false;
       speakerIcon.releasePointerCapture(e.pointerId);
