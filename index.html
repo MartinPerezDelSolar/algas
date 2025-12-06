@@ -22,20 +22,6 @@
       color: #e5f3ff;
     }
 
-    /* Capa de fundido de entrada */
-    .intro-fade {
-      position: fixed;
-      inset: 0;
-      background: #02070b;
-      z-index: 9999;
-      opacity: 1;
-      pointer-events: none;
-      transition: opacity 0.9s ease-out;
-    }
-    .intro-fade.hidden {
-      opacity: 0;
-    }
-
     .sea-container {
       position: relative;
       width: 100vw;
@@ -215,9 +201,10 @@
       }
     }
 
-    /* ======================= ICONO DE AUDIO ======================= */
+    /* =====================================================
+       ICONO DE SONIDO
+       ===================================================== */
 
-    /* Icono de audio */
     #speakerIcon {
       position: fixed;
       bottom: 40px;
@@ -237,7 +224,7 @@
       box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
       opacity: 0.85;
       transition: opacity 0.2s ease;
-      z-index: 20; /* por encima de todo el mar */
+      z-index: 10;
       touch-action: none;
       user-select: none;
       -webkit-user-drag: none;
@@ -339,13 +326,29 @@
     #speakerIcon.active #ringCircle {
       animation: ringColorShift 12s ease-in-out infinite;
     }
+
+    /* =====================================================
+       NIEBLA NEGRA INFERIOR SOBRE TODAS LAS CAPAS
+       ===================================================== */
+    .bottom-fog {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 8vh;              /* 8% inferior de la pantalla */
+      pointer-events: none;
+      z-index: 20;             /* por encima de todo, incluso partículas y grain */
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 1) 0%,    /* 0%: negro opaco (parte más baja) */
+        rgba(0, 0, 0, 1) 37.5%, /* ~5% (de ese 8%): sigue negro */
+        rgba(0, 0, 0, 0) 100%   /* hasta 8%: se vuelve transparente */
+      );
+    }
   </style>
 </head>
 
 <body>
-  <!-- Capa para fundido suave en cualquier dispositivo -->
-  <div class="intro-fade" id="intro-fade"></div>
-
   <div class="sea-container" id="sea-container">
 
     <div class="center-block">
@@ -368,7 +371,7 @@
     <div class="grain"></div>
   </div>
 
-  <!-- Icono de sonido encima de todo -->
+  <!-- ICONO DE SONIDO -->
   <div id="speakerIcon" class="muted">
     <div class="ring">
       <svg viewBox="0 0 60 60">
@@ -378,18 +381,18 @@
     <img src="sonido/icono.png" alt="Audio marino" draggable="false">
   </div>
 
-  <script>
-    /* ========== CÓDIGO DEL MAR (ALGAS + PARTÍCULAS + FADE) ========== */
+  <!-- NIEBLA NEGRA INFERIOR -->
+  <div class="bottom-fog"></div>
 
+  <!-- SCRIPT ORIGINAL DEL FONDO MARINO -->
+  <script>
     const algaeSources = [
       "algas/algas 1.png","algas/algas 2.png","algas/algas 3.png",
       "algas/algas 4.png","algas/algas 5.png"
     ];
 
-    const container          = document.getElementById("sea-container");
+    const container = document.getElementById("sea-container");
     const particlesContainer = document.getElementById("particles-layer");
-    const introFade          = document.getElementById("intro-fade");
-
     let bgImages = [], fgImages = [];
     let bgReady = false, fgReady = false, revealed = false;
 
@@ -402,22 +405,10 @@
       return window.innerWidth || document.documentElement.clientWidth || screen.width;
     }
 
-    function doReveal() {
-      requestAnimationFrame(() => {
-        container.classList.add("visible");
-        if (introFade) {
-          introFade.classList.add("hidden");
-          setTimeout(() => {
-            introFade.remove();
-          }, 1000);
-        }
-      });
-    }
-
     function tryReveal() {
       if (bgReady && fgReady && !revealed) {
         revealed = true;
-        doReveal();
+        container.classList.add("visible");
       }
     }
 
@@ -427,15 +418,11 @@
       fgImages = [];
       bgReady = fgReady = revealed = false;
       container.classList.remove("visible");
-
-      if (introFade) {
-        introFade.classList.remove("hidden");
-      }
-
       loadBG();
       loadFG();
     }
 
+    /* ---------- FONDO ---------- */
     function loadBG() {
       const count = Math.floor(random(10,18));
       let done = 0;
@@ -487,6 +474,7 @@
       tryReveal();
     }
 
+    /* ---------- FRENTE ---------- */
     function loadFG() {
       const count = Math.floor(random(7,12));
       let done = 0;
@@ -531,6 +519,7 @@
       tryReveal();
     }
 
+    /* ---------- PARTÍCULAS ---------- */
     function createParticles() {
       particlesContainer.innerHTML = "";
 
@@ -597,9 +586,8 @@
     });
   </script>
 
+  <!-- SCRIPT DEL SONIDO -->
   <script>
-    /* ===================== AUDIO ENGINE ICONO ===================== */
-
     let audioCtx = null;
     let masterGain = null;
     let filter = null;
@@ -887,7 +875,6 @@
 
     window.addEventListener("load", ()=>{
       initRing();
-      // Comienza muteado, se activa al tocar el icono
     });
   </script>
 </body>
