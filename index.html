@@ -33,7 +33,7 @@
       height: 100vh;
       overflow: hidden;
 
-      /* Entrada elegante: empieza invisible y ligeramente abajo */
+      /* Entrada elegante */
       opacity: 0;
       transform: translateY(8px);
       transition:
@@ -53,7 +53,8 @@
       position: absolute;
       object-fit: cover;
       pointer-events: none;
-      transform-origin: 50% 100%; /* ancladas abajo para el efecto puppet */
+      transform-origin: 50% 100%; /* ancladas abajo */
+      /* OJO: sin mask-image para evitar conflictos con iOS */
     }
 
     /* Fondo — blur + efecto agua */
@@ -148,7 +149,7 @@
        -------------------------- -->
   <svg width="0" height="0" style="position:absolute">
     <defs>
-      <filter id="agua-suave" x="-20%" y="-20%" width="140%" height="140%">
+      <filter id="agua-suave" x="0" y="0" width="100%" height="100%">
         <feTurbulence
             type="fractalNoise"
             baseFrequency="0.015 0.035"
@@ -164,7 +165,7 @@
         <feDisplacementMap
             in="SourceGraphic"
             in2="noise"
-            scale="12"
+            scale="10"
             xChannelSelector="R"
             yChannelSelector="G" />
       </filter>
@@ -180,215 +181,3 @@
       "algas/algas 2.png",
       "algas/algas 3.png",
       "algas/algas 4.png",
-      "algas/algas 5.png"
-    ];
-
-    const container = document.getElementById("sea-container");
-    const particlesContainer = document.getElementById("particles-layer");
-
-    let bgImages = [];
-    let fgImages = [];
-
-    // flags para entrada elegante
-    let bgReady = false;
-    let fgReady = false;
-    let hasRevealed = false;
-
-    function random(min, max) {
-      return min + Math.random() * (max - min);
-    }
-
-    function resetRevealState() {
-      bgReady = false;
-      fgReady = false;
-      hasRevealed = false;
-      container.classList.remove("visible");
-    }
-
-    function tryRevealScene() {
-      if (bgReady && fgReady && !hasRevealed) {
-        hasRevealed = true;
-        // un frame para asegurar que todo esté pintado
-        requestAnimationFrame(() => {
-          container.classList.add("visible");
-        });
-      }
-    }
-
-    function createSea() {
-      container.querySelectorAll("img.alga").forEach(img => img.remove());
-      bgImages = [];
-      fgImages = [];
-
-      resetRevealState();
-      createBackgroundAlgae();
-      createForegroundAlgae();
-    }
-
-    /* ----- FONDO ----- */
-    function createBackgroundAlgae() {
-      // más algas en el fondo
-      const count = Math.floor(random(10, 18));
-      let loaded = 0;
-
-      for (let i = 0; i < count; i++) {
-        const src = algaeSources[Math.floor(Math.random() * algaeSources.length)];
-        const img = document.createElement("img");
-        img.className = "alga alga-bg";
-        img.src = src;
-
-        img.style.opacity = random(0.22, 0.40).toFixed(2);
-
-        const blur = random(1.2, 3.2);
-        img.style.filter = `blur(${blur.toFixed(1)}px) saturate(0.8) url(#agua-suave)`;
-
-        if (Math.random() < 0.5) img.style.transform = "scaleX(-1)";
-
-        img.onload = () => {
-          loaded++;
-          if (loaded === count) layoutBackgroundAlgae();
-        };
-
-        bgImages.push(img);
-        container.insertBefore(img, container.firstChild);
-      }
-    }
-
-    function layoutBackgroundAlgae() {
-      if (!bgImages.length) return;
-
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
-
-      const totalHeight = vh * 1.1;   // 110% de la pantalla
-      const topOffset  = -vh * 0.1;   // subimos 10% para ocultar base
-
-      let currentX = random(0.05 * vw, 0.1 * vw);
-
-      bgImages.forEach(img => {
-        const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-
-        let width = vh * ratio * 0.95;
-        const maxWidth = vw * 0.35;
-        if (width > maxWidth) width = maxWidth;
-
-        if (currentX + width > vw - 0.05 * vw) {
-          img.remove();
-          return;
-        }
-
-        img.style.height = totalHeight + "px";
-        img.style.width  = width + "px";
-        img.style.top    = topOffset + "px";
-        img.style.left   = currentX + "px";
-
-        const gap = random(0.10 * vw, 0.20 * vw);
-        currentX += width + gap;
-      });
-
-      bgReady = true;
-      tryRevealScene();
-    }
-
-    /* ----- FRENTE ----- */
-    function createForegroundAlgae() {
-      // menos algas delante
-      const count = Math.floor(random(7, 12));
-      let loaded = 0;
-
-      for (let i = 0; i < count; i++) {
-        const src = algaeSources[Math.floor(Math.random() * algaeSources.length)];
-        const img = document.createElement("img");
-        img.className = "alga alga-fg";
-        img.src = src;
-
-        img.style.opacity = random(0.50, 0.78).toFixed(2);
-        if (Math.random() < 0.5) img.style.transform = "scaleX(-1)";
-
-        img.onload = () => {
-          loaded++;
-          if (loaded === count) layoutForegroundAlgae();
-        };
-
-        fgImages.push(img);
-        // Insertar delante de overlay para que quede bajo la atmósfera
-        container.insertBefore(img, container.querySelector(".overlay"));
-      }
-    }
-
-    function layoutForegroundAlgae() {
-      if (!fgImages.length) return;
-
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
-
-      const segments = fgImages.length - 1 || 1;
-      const segmentWidth = vw / segments;
-
-      const totalHeight = vh * 1.1;
-      const topOffset  = -vh * 0.1;
-
-      fgImages.forEach((img, i) => {
-        const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        const width = vh * ratio * 1.08;
-
-        const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
-        const left   = center - width / 2;
-
-        img.style.height = totalHeight + "px";
-        img.style.width  = width + "px";
-        img.style.left   = left + "px";
-        img.style.top    = topOffset + "px";
-      });
-
-      fgReady = true;
-      tryRevealScene();
-    }
-
-    /* ----- PARTÍCULAS ----- */
-    function createParticles() {
-      if (!particlesContainer) return;
-
-      particlesContainer.innerHTML = "";
-
-      const count = 60;
-      for (let i = 0; i < count; i++) {
-        const p = document.createElement("div");
-        p.className = "particle";
-
-        const size = random(2, 5);
-        p.style.width = size + "px";
-        p.style.height = size + "px";
-
-        const left = random(0, 100);
-        const startY = random(0, 100);
-        p.style.left = left + "vw";
-        p.style.top = startY + "vh";
-
-        const dx = random(-16, 16).toFixed(1) + "px";
-        p.style.setProperty("--dx", dx);
-
-        const dur = random(18, 36).toFixed(1) + "s";
-        const delay = random(-36, 0).toFixed(1) + "s";
-
-        p.style.animationDuration = dur;
-        p.style.animationDelay = delay;
-        p.style.opacity = random(0.12, 0.40).toFixed(2);
-
-        particlesContainer.appendChild(p);
-      }
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      createSea();
-      createParticles();
-    });
-
-    window.addEventListener("resize", () => {
-      layoutBackgroundAlgae();
-      layoutForegroundAlgae();
-      createParticles();
-    });
-  </script>
-</body>
-</html>
