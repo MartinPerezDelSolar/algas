@@ -27,6 +27,18 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
+
+      /* 👇 Elegante entrada: empieza invisible */
+      opacity: 0;
+      transform: translateY(8px);
+      transition:
+        opacity 0.7s ease-out,
+        transform 0.7s ease-out;
+    }
+
+    .sea-container.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     /* ---------------------------------
@@ -39,7 +51,7 @@
       transform-origin: 50% 100%; /* ancladas abajo para el efecto puppet */
     }
 
-    /* Fondo — con blur + efecto agua ahora también */
+    /* Fondo — con blur + efecto agua */
     .alga-bg {
       z-index: 0;
     }
@@ -172,8 +184,30 @@
     let bgImages = [];
     let fgImages = [];
 
+    // flags para entrada elegante
+    let bgReady = false;
+    let fgReady = false;
+    let hasRevealed = false;
+
     function random(min, max) {
       return min + Math.random() * (max - min);
+    }
+
+    function resetRevealState() {
+      bgReady = false;
+      fgReady = false;
+      hasRevealed = false;
+      container.classList.remove("visible");
+    }
+
+    function tryRevealScene() {
+      if (bgReady && fgReady && !hasRevealed) {
+        hasRevealed = true;
+        // dejamos un frame para asegurar que todo esté pintado
+        requestAnimationFrame(() => {
+          container.classList.add("visible");
+        });
+      }
     }
 
     function createSea() {
@@ -181,13 +215,13 @@
       bgImages = [];
       fgImages = [];
 
+      resetRevealState();
       createBackgroundAlgae();
       createForegroundAlgae();
     }
 
     /* ----- FONDO ----- */
     function createBackgroundAlgae() {
-      // cantidad aumentada en versiones previas
       const count = Math.floor(random(10, 18));
       let loaded = 0;
 
@@ -200,7 +234,6 @@
         img.style.opacity = random(0.22, 0.40).toFixed(2);
 
         const blur = random(1.2, 3.2);
-        // blur + efecto agua
         img.style.filter = `blur(${blur.toFixed(1)}px) saturate(0.8) url(#agua-suave)`;
 
         if (Math.random() < 0.5) img.style.transform = "scaleX(-1)";
@@ -222,14 +255,13 @@
       const vw = window.innerWidth;
 
       const totalHeight = vh * 1.1;   // 110% de la pantalla
-      const topOffset  = -vh * 0.1;   // subimos 10% para que quede escondida la base
+      const topOffset  = -vh * 0.1;   // subimos 10% para ocultar base
 
       let currentX = random(0.05 * vw, 0.1 * vw);
 
       bgImages.forEach(img => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
 
-        // ancho sigue calculado usando vh original, como tenías
         let width = vh * ratio * 0.95;
         const maxWidth = vw * 0.35;
         if (width > maxWidth) width = maxWidth;
@@ -247,11 +279,13 @@
         const gap = random(0.10 * vw, 0.20 * vw);
         currentX += width + gap;
       });
+
+      bgReady = true;
+      tryRevealScene();
     }
 
     /* ----- FRENTE ----- */
     function createForegroundAlgae() {
-      // cantidad reducida un poco en versiones previas
       const count = Math.floor(random(7, 12));
       let loaded = 0;
 
@@ -270,6 +304,7 @@
         };
 
         fgImages.push(img);
+        // Insertar delante de overlay para que se vea bajo la atmósfera
         container.insertBefore(img, container.querySelector(".overlay"));
       }
     }
@@ -283,12 +318,12 @@
       const segments = fgImages.length - 1 || 1;
       const segmentWidth = vw / segments;
 
-      const totalHeight = vh * 1.1;   // también 110% para las delanteras
-      const topOffset  = -vh * 0.1;   // y mismas coordenadas Y
+      const totalHeight = vh * 1.1;
+      const topOffset  = -vh * 0.1;
 
       fgImages.forEach((img, i) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        const width = vh * ratio * 1.08; // igual que antes
+        const width = vh * ratio * 1.08;
 
         const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
         const left   = center - width / 2;
@@ -298,6 +333,9 @@
         img.style.left   = left + "px";
         img.style.top    = topOffset + "px";
       });
+
+      fgReady = true;
+      tryRevealScene();
     }
 
     /* ----- PARTÍCULAS ----- */
