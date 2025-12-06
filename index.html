@@ -52,9 +52,9 @@
 
     @keyframes corrientePuppet {
       0% { transform: translateY(0) rotate(0deg) skewX(0deg); }
-      25% { transform: translateY(-6px) rotate(.5deg) skewX(1.5deg); }
-      50% { transform: translateY(-12px) rotate(1.2deg) skewX(3deg); }
-      75% { transform: translateY(-6px) rotate(.4deg) skewX(1.5deg); }
+      25% { transform: translateY(-6px) rotate(.4deg) skewX(1.2deg); }
+      50% { transform: translateY(-10px) rotate(.9deg) skewX(2.4deg); }
+      75% { transform: translateY(-5px) rotate(.3deg) skewX(1.0deg); }
       100% { transform: translateY(0) rotate(0deg) skewX(0deg); }
     }
 
@@ -148,7 +148,8 @@
     .particle {
       position: absolute;
       border-radius: 999px;
-      mix-blend-mode: screen;
+      mix-blend-mode: multiply; /* ← CAMBIO A MULTIPLY */
+      opacity: 0.4;
       animation: particleCurrent ease-in-out infinite alternate;
     }
 
@@ -240,8 +241,10 @@
     const random=(a,b)=>a+Math.random()*(b-a);
 
     function getVH() {
-      // un poco más robusto para iPad/Safari
       return window.innerHeight || document.documentElement.clientHeight || screen.height;
+    }
+    function getVW() {
+      return window.innerWidth || document.documentElement.clientWidth || screen.width;
     }
 
     function tryReveal(){
@@ -259,7 +262,7 @@
       loadBG(); loadFG();
     }
 
-    /* ---------- FONDO: usando TOP, altura 110% y leve offset arriba ---------- */
+    /* ---------- FONDO: altura = alto pantalla (PNG entero), sin offsets raros ---------- */
     function loadBG(){
       const count=Math.floor(random(10,18));
       let done=0;
@@ -281,16 +284,16 @@
       if (!bgImages.length) return;
 
       const vh = getVH();
-      const vw = window.innerWidth || document.documentElement.clientWidth || screen.width;
+      const vw = getVW();
 
-      const totalHeight = vh * 1.10;  // 110% de la pantalla
-      const topOffset   = -vh * 0.05; // subimos 5%: pasa por encima de Y=0 y baja 5%
+      const totalHeight = vh;  // el PNG se adapta EXACTO a la altura de la pantalla
+      const topOffset   = 0;   // nada fuera del contenedor: evita cropeos internos
 
       let currentX = random(vw * 0.05, vw * 0.10);
 
       bgImages.forEach(img=>{
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        let width   = vh * ratio * 0.95;
+        let width   = totalHeight * ratio;
         const maxWidth = vw * 0.35;
         if (width > maxWidth) width = maxWidth;
 
@@ -311,7 +314,7 @@
       tryReveal();
     }
 
-    /* ---------- FRENTE: igual lógica que el fondo ---------- */
+    /* ---------- FRENTE: misma lógica, PNG entero en pantalla ---------- */
     function loadFG(){
       const count=Math.floor(random(7,12));
       let done=0;
@@ -332,17 +335,17 @@
       if (!fgImages.length) return;
 
       const vh = getVH();
-      const vw = window.innerWidth || document.documentElement.clientWidth || screen.width;
+      const vw = getVW();
 
-      const totalHeight = vh * 1.10;
-      const topOffset   = -vh * 0.05;
+      const totalHeight = vh;
+      const topOffset   = 0;
 
       const segments = fgImages.length - 1 || 1;
       const segmentWidth = vw / segments;
 
       fgImages.forEach((img,i)=>{
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        const width = vh * ratio * 1.08;
+        const width = totalHeight * ratio * 1.05;
 
         const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
         const left   = center - width / 2;
@@ -361,10 +364,10 @@
     function createParticles(){
       particlesContainer.innerHTML="";
       const palette=[
-        "rgba(230,245,255,.85)",
-        "rgba(200,225,240,.80)",
+        "rgba(230,245,255,.9)",
+        "rgba(200,225,240,.8)",
         "rgba(180,210,220,.75)",
-        "rgba(160,205,210,.70)"
+        "rgba(160,205,210,.7)"
       ];
 
       for(let i=0;i<60;i++){
@@ -374,9 +377,6 @@
         p.style.width=p.style.height=s+"px";
         p.style.background=palette[Math.floor(Math.random()*palette.length)];
         if(s>4) p.style.filter=`blur(${random(.5,1.8)}px)`;
-
-        const vh = getVH();
-        const vw = window.innerWidth || document.documentElement.clientWidth || screen.width;
 
         p.style.left=random(0,100)+"vw";
         p.style.top=random(0,100)+"vh";
