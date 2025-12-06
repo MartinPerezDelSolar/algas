@@ -16,8 +16,8 @@
       height: 100%;
       overflow: hidden;
       background:
-        radial-gradient(circle at 10% 0%, #3f7f82 0%, #0b3a3e 35%, #020e10 80%),
-        linear-gradient(to bottom, #083234, #020b0d);
+        radial-gradient(circle at 10% 0%, #244d55 0%, #05252a 38%, #01070a 82%),
+        linear-gradient(to bottom, #02151a, #000000);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: #e5f3ff;
     }
@@ -40,6 +40,7 @@
       position: absolute;
       pointer-events: none;
       object-fit: cover;
+      height: 100%;          /* <- la altura SIEMPRE es la del contenedor */
       transform-origin: 50% 100%;
       transform: translateZ(0);
     }
@@ -164,8 +165,8 @@
       z-index: 4;
       pointer-events: none;
       background:
-        radial-gradient(circle at 50% 15%, rgba(255,255,220,.08), transparent),
-        linear-gradient(to bottom, rgba(10,35,45,.50), rgba(0,0,0,.75));
+        radial-gradient(circle at 50% 10%, rgba(160,220,255,.15), transparent 55%),
+        linear-gradient(to bottom, rgba(2,16,26,.65), rgba(0,0,0,.9));
       mix-blend-mode: soft-light;
     }
 
@@ -239,9 +240,6 @@
 
     const random = (a,b) => a + Math.random()*(b-a);
 
-    function getVH() {
-      return window.innerHeight || document.documentElement.clientHeight || screen.height;
-    }
     function getVW() {
       return window.innerWidth || document.documentElement.clientWidth || screen.width;
     }
@@ -263,7 +261,7 @@
       loadFG();
     }
 
-    /* ---------- FONDO: PNG entero en la altura de la pantalla ---------- */
+    /* ---------- FONDO: distribución elegante, altura por CSS ---------- */
     function loadBG() {
       const count = Math.floor(random(10,18));
       let done = 0;
@@ -284,17 +282,15 @@
     function layoutBG() {
       if (!bgImages.length) return;
 
-      const vh = getVH();
       const vw = getVW();
-
-      const totalHeight = vh;  // ajusta a la altura de pantalla
       const topOffset   = 0;
 
       let currentX = random(vw * 0.05, vw * 0.10);
 
       bgImages.forEach(img => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        let width   = totalHeight * ratio;
+        // el alto lo maneja CSS (100%), usamos ratio solo para referencia
+        let width   = (window.innerHeight || 800) * ratio;
         const maxWidth = vw * 0.35;
         if (width > maxWidth) width = maxWidth;
 
@@ -303,7 +299,6 @@
           return;
         }
 
-        img.style.height = totalHeight + "px";
         img.style.width  = width + "px";
         img.style.top    = topOffset + "px";
         img.style.left   = currentX + "px";
@@ -335,22 +330,20 @@
     function layoutFG() {
       if (!fgImages.length) return;
 
-      const vh = getVH();
       const vw = getVW();
-
-      const totalHeight   = vh;
       const topOffset     = 0;
       const segments      = fgImages.length - 1 || 1;
       const segmentWidth  = vw / segments;
 
+      const approxHeight = window.innerHeight || 800;
+
       fgImages.forEach((img, i) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        const width = totalHeight * ratio * 1.05;
+        const width = approxHeight * ratio * 1.05;
 
         const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
         const left   = center - width / 2;
 
-        img.style.height = totalHeight + "px";
         img.style.width  = width + "px";
         img.style.top    = topOffset + "px";
         img.style.left   = left + "px";
@@ -360,59 +353,93 @@
       tryReveal();
     }
 
-    /* ---------- PARTÍCULAS ORGÁNICAS ---------- */
+    /* ---------- PARTÍCULAS ORGÁNICAS, NOCHE PROFUNDA ---------- */
     function createParticles() {
-  particlesContainer.innerHTML = "";
+      particlesContainer.innerHTML = "";
 
-  const palette = [
-    "rgba(200,230,240,0.40)",
-    "rgba(180,210,220,0.38)",
-    "rgba(160,200,210,0.34)",
-    "rgba(140,180,190,0.32)"
-  ];
+      // polvo/plancton frío, noche profunda
+      const smallPalette = [
+        "rgba(200,230,240,0.45)",
+        "rgba(180,210,220,0.40)",
+        "rgba(160,200,210,0.36)",
+        "rgba(140,180,190,0.34)"
+      ];
 
-  const totalParticles = 150;
-  
-  for (let i = 0; i < totalParticles; i++) {
-    const p = document.createElement("div");
-    p.className = "particle";
+      const bigPalette = [
+        "rgba(190,230,240,0.32)",
+        "rgba(170,215,235,0.30)",
+        "rgba(150,205,225,0.28)"
+      ];
 
-    // Formas orgánicas: ancho y alto distintos
-    const w = random(2, 10);
-    const h = random(2, 10);
-    p.style.width  = w + "px";
-    p.style.height = h + "px";
+      const totalParticles = 180;
+      const bigCount = 24; // halos grandes difusos
 
-    // Bordes irregulares
-    const r1 = random(40, 90);
-    const r2 = random(40, 90);
-    const r3 = random(40, 90);
-    const r4 = random(40, 90);
-    p.style.borderRadius = `${r1}% ${r2}% ${r3}% ${r4}%`;
+      for (let i = 0; i < totalParticles; i++) {
+        const p = document.createElement("div");
+        p.className = "particle";
 
-    // Color
-    p.style.background = palette[Math.floor(Math.random() * palette.length)];
+        // --- halos grandes cinematográficos ---
+        if (i < bigCount) {
+          const sizeBase = random(26, 60);
+          const w = sizeBase * random(0.9, 1.3);
+          const h = sizeBase * random(0.7, 1.1);
+          p.style.width  = w + "px";
+          p.style.height = h + "px";
 
-    // ---- BLUR ----
-    // 10% sin blur
-    if (Math.random() > 0.10) {  
-      p.style.filter = `blur(${random(0.5, 3)}px)`; 
+          const r1 = random(60, 100);
+          const r2 = random(60, 100);
+          const r3 = random(60, 100);
+          const r4 = random(60, 100);
+          p.style.borderRadius = `${r1}% ${r2}% ${r3}% ${r4}%`;
+
+          p.style.background = bigPalette[Math.floor(Math.random()*bigPalette.length)];
+          p.style.opacity    = 0.22;
+
+          p.style.filter = `blur(${random(8, 22)}px)`;
+
+          p.style.left = random(-10, 110) + "vw";
+          p.style.top  = random(-5, 105) + "vh";
+
+          p.style.setProperty("--driftX", random(4, 10) + "vw");
+          p.style.setProperty("--ampY",  random(-12, 12) + "px";
+
+          p.style.animationDuration = random(26, 46) + "s";
+          p.style.animationDelay    = random(-40, 0) + "s";
+        } 
+        // --- polvo/partículas pequeñas ---
+        else {
+          const w = random(2, 10);
+          const h = random(2, 10);
+          p.style.width  = w + "px";
+          p.style.height = h + "px";
+
+          const r1 = random(40, 90);
+          const r2 = random(40, 90);
+          const r3 = random(40, 90);
+          const r4 = random(40, 90);
+          p.style.borderRadius = `${r1}% ${r2}% ${r3}% ${r4}%`;
+
+          p.style.background = smallPalette[Math.floor(Math.random()*smallPalette.length)];
+          p.style.opacity    = 0.32;
+
+          // 10% sin blur, 90% con blur
+          if (Math.random() > 0.10) {
+            p.style.filter = `blur(${random(0.5, 3)}px)`;
+          }
+
+          p.style.left = random(0, 100) + "vw";
+          p.style.top  = random(0, 100) + "vh";
+
+          p.style.setProperty("--driftX", random(3, 10) + "vw");
+          p.style.setProperty("--ampY",  random(-8, 8) + "px");
+
+          p.style.animationDuration = random(14, 30) + "s";
+          p.style.animationDelay    = random(-25, 0) + "s";
+        }
+
+        particlesContainer.appendChild(p);
+      }
     }
-
-    // Posición inicial
-    p.style.left = random(0, 100) + "vw";
-    p.style.top  = random(0, 100) + "vh";
-
-    // Movimiento de corriente
-    p.style.setProperty("--driftX", random(3, 10) + "vw");
-    p.style.setProperty("--ampY",  random(-8, 8) + "px");
-
-    p.style.animationDuration = random(14, 30) + "s";
-    p.style.animationDelay    = random(-25, 0) + "s";
-
-    particlesContainer.appendChild(p);
-  }
-}
 
     window.addEventListener("DOMContentLoaded", () => {
       createSea();
