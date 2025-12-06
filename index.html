@@ -2,358 +2,908 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Portafolio – Andrea Lértora</title>
+  <title>Fondo marino · Andrea Lértora</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <style>
-    /* ----- RESET BÁSICO ----- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       height: 100%;
-      scroll-behavior: smooth;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 10% 0%, #3f7f82 0%, #0b3a3e 35%, #020e10 80%),
+        linear-gradient(to bottom, #083234, #020b0d);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #e5f3ff;
     }
 
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Helvetica Neue", Arial, sans-serif;
-      background: radial-gradient(circle at top, #111827 0%, #020617 40%, #000 100%);
-      color: #e5e7eb;
-      overflow-x: hidden;
-    }
-
-    /* ----- MARCO GENERAL ----- */
-    .page {
-      min-height: 100vh;
-      position: relative;
-    }
-
-    header {
+    /* Capa de fundido de entrada */
+    .intro-fade {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      z-index: 100;
-      padding: 1.2rem 5vw;
+      inset: 0;
+      background: #02070b;
+      z-index: 9999;
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 0.9s ease-out;
+    }
+    .intro-fade.hidden {
+      opacity: 0;
+    }
+
+    .sea-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .7s ease-out, transform .7s ease-out;
+    }
+    .sea-container.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ALGA BASE */
+    .alga {
+      position: absolute;
+      pointer-events: none;
+      object-fit: cover;
+      transform-origin: 50% 100%;
+      transform: translateZ(0);
+    }
+    .alga-bg { z-index: 0; }
+    .alga-fg {
+      z-index: 1;
+      filter: saturate(.95);
+      animation: corrientePuppet 12s ease-in-out infinite;
+    }
+
+    @keyframes corrientePuppet {
+      0%   { transform: translateY(0) rotate(0deg) skewX(0deg); }
+      25%  { transform: translateY(-6px) rotate(.4deg) skewX(1.2deg); }
+      50%  { transform: translateY(-10px) rotate(.9deg) skewX(2.4deg); }
+      75%  { transform: translateY(-5px) rotate(.3deg) skewX(1.0deg); }
+      100% { transform: translateY(0) rotate(0deg) skewX(0deg); }
+    }
+
+    /* BLOQUE CENTRAL — TÍTULO Y BOTONES */
+    .center-block {
+      position: absolute;
+      left: 8vw;
+      top: 12vh;
+      transform: translateY(30px);
+      opacity: 0;
+      z-index: 6; /* por encima de todo el mar y la neblina */
+      transition: opacity .8s ease-out .1s, transform .8s ease-out .1s;
+    }
+    .sea-container.visible .center-block {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .name {
+      display: inline-flex;
+      gap: 0.25em;
+      font-size: clamp(2.4rem, 4vw, 3.3rem);
+      text-transform: uppercase;
+      letter-spacing: .32em;
+      margin-bottom: .2rem;
+      color: #f9fafb;
+      text-shadow: 0 1px 0 rgba(0,0,0,.7), 0 18px 40px rgba(0,0,0,.9);
+    }
+    .name span { display: inline-block; }
+
+    .subtitle {
+      font-size: .85rem;
+      letter-spacing: .24em;
+      color: #a5f3fc;
+      margin-bottom: .8rem;
+      text-transform: uppercase;
+    }
+
+    .nav {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: .35rem;
+    }
+
+    .nav-button {
+      width: 177px;
+      padding: .20rem .75rem;
+      border: none;
+      border-radius: 3px;
+      background-color: rgba(80,200,190,.35);
+      mix-blend-mode: multiply;
+      color: #e5f3ff;
+      font-size: .7rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      display: flex;
       align-items: center;
+      cursor: pointer;
+
+      box-shadow:
+        0 2px 4px rgba(0,0,0,.35),
+        0 0 0 1px rgba(15,23,42,.45);
+
+      transition: background-color .18s, transform .13s,
+                  box-shadow .18s, letter-spacing .13s;
+    }
+
+    .nav-button:hover {
+      background-color: rgba(94,234,212,.42);
+      transform: translateX(2px);
+      letter-spacing: .20em;
+      box-shadow: 0 6px 14px rgba(0,0,0,.55),
+                  0 0 0 1px rgba(15,23,42,.65);
+    }
+
+    .nav-button:active {
+      background-color: rgba(45,164,150,.52);
+      transform: translateY(1px) scale(.99);
+      box-shadow: 0 1px 3px rgba(0,0,0,.6),
+                  0 0 0 1px rgba(15,23,42,.9);
+    }
+
+    /* PARTÍCULAS */
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
       pointer-events: none;
     }
 
-    header .brand,
-    header .subtitle {
-      pointer-events: auto;
+    .particle {
+      position: absolute;
+      mix-blend-mode: multiply;
+      opacity: 0.30;
+      animation: particleCurrent ease-in-out infinite alternate;
     }
 
-    .brand {
-      font-size: 0.95rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #9ca3af;
+    @keyframes particleCurrent {
+      0%   { transform: translate3d(0,0,0); }
+      50%  { transform: translate3d(var(--driftX), var(--ampY), 0); }
+      100% { transform: translate3d(0,0,0); }
     }
 
-    .subtitle {
-      font-size: 0.85rem;
-      color: #6b7280;
+    /* NEBLINA OSCURA EN LA PARTE DE ABAJO PARA TAPAR LA BASE */
+    .bottom-fade {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 15vh; /* cuánto sube el degradado */
+      z-index: 2;   /* encima de las algas, debajo de partículas/overlay */
+      pointer-events: none;
+      background: linear-gradient(
+        to top,
+        rgba(0, 8, 10, 0.95) 0%,
+        rgba(0, 15, 20, 0.85) 30%,
+        rgba(0, 25, 35, 0.60) 65%,
+        rgba(0, 30, 40, 0.0) 100%
+      );
     }
 
-    main {
-      position: relative;
-      padding-top: 4.5rem; /* espacio bajo el header fijo */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 15%, rgba(255,255,220,.08), transparent),
+        linear-gradient(to bottom, rgba(10,35,45,.50), rgba(0,0,0,.75));
+      mix-blend-mode: soft-light;
     }
 
-    /* ----- PANELES TIPO “APPLE” ----- */
-    .panel {
-      position: relative;
-      height: 100vh;
+    .grain {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      opacity: .16;
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
+    }
+
+    @media (max-width: 768px) {
+      .center-block {
+        left: 6vw;
+        top: 10vh;
+      }
+      .name {
+        font-size: clamp(2rem, 6vw, 2.6rem);
+        letter-spacing: 0.26em;
+        flex-direction: column;
+        gap: 0.05em;
+      }
+      .subtitle {
+        font-size: 0.8rem;
+        letter-spacing: 0.20em;
+        margin-bottom: 0.7rem;
+      }
+      .nav-button {
+        width: 177px;
+        padding: 0.22rem 0.75rem;
+      }
+    }
+
+    /* ======================= ICONO DE AUDIO ======================= */
+
+    #speakerIcon {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: min(7vw, 7vh);
+      height: min(7vw, 7vh);
+      min-width: 42px;
+      min-height: 42px;
+      max-width: 80px;
+      max-height: 80px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 5vw;
-      /* superposición suave entre paneles */
-      margin-top: -20vh;
-      z-index: 1;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+      opacity: 0.85;
+      transition: opacity 0.2s ease;
+      z-index: 20;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
-    .panel:first-of-type {
-      margin-top: 0;
+    #speakerIcon:hover { opacity: 0.85; }
+    #speakerIcon:active { transform: scale(0.95); }
+
+    @keyframes attentionBlink {
+      0%, 5%   { opacity: 0.55; }
+      6%       { opacity: 1; }
+      8%       { opacity: 0.4; }
+      9%       { opacity: 1; }
+      11%      { opacity: 0.4; }
+      12%      { opacity: 1; }
+      100%     { opacity: 0.6; }
     }
 
-    .panel-inner {
-      position: relative;
-      width: min(100%, 1200px);
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow:
-        0 30px 80px rgba(0, 0, 0, 0.75),
-        0 0 0 1px rgba(148, 163, 184, 0.12);
-      transform-origin: center;
-      background: #020617;
+    #speakerIcon.muted {
+      animation: attentionBlink 7s ease-in-out infinite;
     }
 
-    .portfolio-image {
-      display: block;
-      width: 100%;
-      height: auto;
-      vertical-align: middle;
-      will-change: transform, filter, opacity;
-      transform-origin: center;
+    #speakerIcon.active {
+      animation: none;
     }
 
-    .gradient-overlay {
-      position: absolute;
-      inset: 0;
+    #speakerIcon img {
+      width: 70%;
+      height: 70%;
+      object-fit: contain;
+      filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));
+      animation: huePulse 5.8s ease-in-out infinite alternate,
+                 floatY 7.4s ease-in-out infinite;
       pointer-events: none;
-      background:
-        radial-gradient(circle at top, rgba(148, 163, 255, 0.30), transparent 55%),
-        linear-gradient(to bottom, rgba(15, 23, 42, 0.85), transparent 30%, rgba(15, 23, 42, 0.9));
-      mix-blend-mode: soft-light;
-      opacity: 0;
-      transition: opacity 0.4s ease-out;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
-    /* Pequeño indicador en esquina (opcional) */
-    .panel-label {
-      position: absolute;
-      bottom: 1rem;
-      left: 1.5rem;
-      font-size: 0.75rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: rgba(209, 213, 219, 0.7);
-      text-shadow: 0 0 12px rgba(0, 0, 0, 0.9);
+    #speakerIcon.active img {
+      animation-duration: 4.8s, 6.2s;
     }
 
-    /* FONDO CON “BRILLOS” */
-    .glow {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: -1;
-      background:
-        radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.12), transparent 50%),
-        radial-gradient(circle at 80% 0%, rgba(244, 114, 182, 0.10), transparent 55%),
-        radial-gradient(circle at 90% 80%, rgba(45, 212, 191, 0.10), transparent 60%);
+    #speakerIcon.muted img {
+      animation-duration: 7.5s, 8.5s;
       opacity: 0.9;
     }
 
-    /* TEXTO FINAL */
-    .end-section {
-      height: 80vh;
+    @keyframes huePulse {
+      0% { filter: hue-rotate(0deg) saturate(1.0) drop-shadow(0 0 5px rgba(0,0,0,0.7)); }
+      50% { filter: hue-rotate(12deg) saturate(1.25) drop-shadow(0 0 7px rgba(0,0,0,0.9)); }
+      100% { filter: hue-rotate(-10deg) saturate(1.1) drop-shadow(0 0 5px rgba(0,0,0,0.7)); }
+    }
+
+    @keyframes floatY {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-3px); }
+      100% { transform: translateY(0); }
+    }
+
+    .ring {
+      position: absolute;
+      inset: -30%;
       display: flex;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      padding: 0 5vw 8vh;
+      pointer-events: none;
     }
 
-    .end-section p {
-      max-width: 480px;
-      font-size: 0.9rem;
-      color: #9ca3af;
-      line-height: 1.6;
+    .ring svg {
+      width: 100%;
+      height: 100%;
     }
 
-    /* RESPONSIVE */
-    @media (max-width: 768px) {
-      header {
-        padding: 0.9rem 1.4rem;
-      }
+    #ringCircle {
+      fill: none;
+      stroke-width: 3;
+      opacity: 0.9;
+      stroke-linecap: round;
+      transform-origin: 50% 50%;
+      transform: rotate(-90deg);
+      stroke: rgba(135, 206, 250, 0.7);
+      transition: stroke 0.3s ease;
+    }
 
-      .panel {
-        padding: 0 1.4rem;
-        margin-top: -16vh;
-      }
+    @keyframes ringColorShift {
+      0%   { stroke: rgba(135, 206, 250, 0.20); }
+      25%  { stroke: rgba(135, 206, 250, 0.85); }
+      50%  { stroke: rgba(173, 216, 230, 0.75); }
+      75%  { stroke: rgba(144, 238, 144, 0.65); }
+      100% { stroke: rgba(135, 206, 250, 0.20); }
+    }
 
-      .panel-inner {
-        border-radius: 18px;
-      }
-
-      .panel-label {
-        font-size: 0.65rem;
-        left: 1.1rem;
-        bottom: 0.85rem;
-      }
-
-      .subtitle {
-        display: none;
-      }
+    #speakerIcon.muted #ringCircle,
+    #speakerIcon.active #ringCircle {
+      animation: ringColorShift 12s ease-in-out infinite;
     }
   </style>
 </head>
+
 <body>
-  <div class="page">
-    <div class="glow"></div>
+  <div class="intro-fade" id="intro-fade"></div>
 
-    <header>
-      <div class="brand">Andrea Lértora</div>
-      <div class="subtitle">Portafolio visual</div>
-    </header>
+  <div class="sea-container" id="sea-container">
 
-    <main id="gallery">
-      <!-- Los paneles se generan automáticamente con JavaScript -->
-    </main>
+    <div class="center-block">
+      <div class="name">
+        <span class="first">Andrea</span>
+        <span class="last">Lértora</span>
+      </div>
+      <div class="subtitle">artista plástica</div>
 
-    <section class="end-section">
-      <p>
-        Desliza de nuevo hacia arriba para volver a recorrer la secuencia.  
-        Puedes seguir agregando imágenes en la carpeta <strong>imagenes</strong>:
-        <code>imagen1.jpg, imagen2.jpg, imagen3.jpg…</code>
-      </p>
-    </section>
+      <nav class="nav">
+        <button class="nav-button">Bio</button>
+        <button class="nav-button">Porta</button>
+        <button class="nav-button">Cont</button>
+        <button class="nav-button">Fun</button>
+      </nav>
+    </div>
+
+    <div class="particles" id="particles-layer"></div>
+    <!-- Nueva neblina de fondo para tapar la base de los PNG -->
+    <div class="bottom-fade"></div>
+    <div class="overlay"></div>
+    <div class="grain"></div>
+  </div>
+
+  <!-- Icono de sonido -->
+  <div id="speakerIcon" class="muted">
+    <div class="ring">
+      <svg viewBox="0 0 60 60">
+        <circle id="ringCircle" cx="30" cy="30" r="26"></circle>
+      </svg>
+    </div>
+    <img src="sonido/icono.png" alt="Audio marino" draggable="false">
   </div>
 
   <script>
-    // ==========================
-    // CONFIGURACIÓN BÁSICA
-    // ==========================
+    /* ========== CÓDIGO DEL MAR (ALGAS + PARTÍCULAS + FADE) ========== */
 
-    // Número máximo de imágenes que el código va a buscar.
-    // Puedes aumentar este número si quieres más.
-    const MAX_IMAGES = 40;
+    const algaeSources = [
+      "algas/algas 1.png","algas/algas 2.png","algas/algas 3.png",
+      "algas/algas 4.png","algas/algas 5.png"
+    ];
 
-    // Carpeta donde están las imágenes
-    const IMAGE_FOLDER = "imagenes";
+    const container          = document.getElementById("sea-container");
+    const particlesContainer = document.getElementById("particles-layer");
+    const introFade          = document.getElementById("intro-fade");
 
-    // Prefijo y extensión esperados
-    const IMAGE_PREFIX = "imagen";
-    const IMAGE_EXT = ".jpg";
+    let bgImages = [], fgImages = [];
+    let bgReady = false, fgReady = false, revealed = false;
 
-    // ==========================
-    // CREAR PANELES DINÁMICAMENTE
-    // ==========================
+    const random = (a,b) => a + Math.random()*(b-a);
 
-    function createPanels() {
-      const gallery = document.getElementById("gallery");
+    function getVH() {
+      return window.innerHeight || document.documentElement.clientHeight || screen.height;
+    }
+    function getVW() {
+      return window.innerWidth || document.documentElement.clientWidth || screen.width;
+    }
 
-      for (let i = 1; i <= MAX_IMAGES; i++) {
-        const section = document.createElement("section");
-        section.className = "panel";
-        section.style.display = "none"; // se mostrará solo si la imagen carga bien
+    function doReveal() {
+      requestAnimationFrame(() => {
+        container.classList.add("visible");
+        if (introFade) {
+          introFade.classList.add("hidden");
+          setTimeout(() => {
+            introFade.remove();
+          }, 1000);
+        }
+      });
+    }
 
-        const inner = document.createElement("div");
-        inner.className = "panel-inner";
-
-        const img = document.createElement("img");
-        img.className = "portfolio-image";
-        img.src = `${IMAGE_FOLDER}/${IMAGE_PREFIX}${i}${IMAGE_EXT}`;
-        img.alt = `Imagen ${i} del portafolio`;
-
-        const overlay = document.createElement("div");
-        overlay.className = "gradient-overlay";
-
-        const label = document.createElement("div");
-        label.className = "panel-label";
-        label.textContent = `Serie · ${i.toString().padStart(2, "0")}`;
-
-        // Si la imagen carga, mostramos el panel
-        img.addEventListener("load", () => {
-          section.style.display = "flex";
-        });
-
-        // Si hay error (por ejemplo, no existe imagenX.jpg), quitamos el panel
-        img.addEventListener("error", () => {
-          section.remove();
-        });
-
-        inner.appendChild(img);
-        inner.appendChild(overlay);
-        inner.appendChild(label);
-        section.appendChild(inner);
-        gallery.appendChild(section);
+    function tryReveal() {
+      if (bgReady && fgReady && !revealed) {
+        revealed = true;
+        doReveal();
       }
     }
 
-    // ==========================
-    // ANIMACIÓN EN SCROLL
-    // ==========================
+    function createSea() {
+      container.querySelectorAll("img.alga").forEach(e => e.remove());
+      bgImages = [];
+      fgImages = [];
+      bgReady = fgReady = revealed = false;
+      container.classList.remove("visible");
 
-    function setupScrollEffects() {
-      const panels = Array.from(document.querySelectorAll(".panel"));
+      if (introFade) {
+        introFade.classList.remove("hidden");
+      }
 
-      let ticking = false;
+      loadBG();
+      loadFG();
+    }
 
-      function onScroll() {
-        if (!ticking) {
-          window.requestAnimationFrame(() => {
-            updatePanels();
-            ticking = false;
-          });
-          ticking = true;
+    /* ---------- FONDO: 106% de alto, subido -6% ---------- */
+    function loadBG() {
+      const count = Math.floor(random(10,18));
+      let done = 0;
+
+      for (let i = 0; i < count; i++) {
+        const img = document.createElement("img");
+        img.className = "alga alga-bg";
+        img.src = algaeSources[Math.floor(Math.random()*algaeSources.length)];
+        img.style.opacity = random(.22,.40);
+        img.style.filter  = `blur(${random(1.2,3.2)}px) saturate(.8)`;
+        if (Math.random() < .5) img.style.transform = "scaleX(-1)";
+        img.onload = () => { done++; if (done === count) layoutBG(); };
+        bgImages.push(img);
+        container.insertBefore(img, container.firstChild);
+      }
+    }
+
+    function layoutBG() {
+      if (!bgImages.length) return;
+
+      const vh = getVH();
+      const vw = getVW();
+
+      const totalHeight = vh * 1.06;
+      const topOffset   = -vh * 0.06;
+
+      let currentX = random(vw * 0.05, vw * 0.10);
+
+      bgImages.forEach(img => {
+        const ratio = img.naturalWidth / img.naturalHeight || 0.4;
+        let width   = totalHeight * ratio;
+        const maxWidth = vw * 0.35;
+        if (width > maxWidth) width = maxWidth;
+
+        if (currentX + width > vw - vw * 0.05) {
+          img.remove();
+          return;
         }
-      }
 
-      function updatePanels() {
-        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        img.style.height = totalHeight + "px";
+        img.style.width  = width + "px";
+        img.style.top    = topOffset + "px";
+        img.style.left   = currentX + "px";
 
-        panels.forEach((panel, index) => {
-          const inner = panel.querySelector(".panel-inner");
-          const img = panel.querySelector(".portfolio-image");
-          const overlay = panel.querySelector(".gradient-overlay");
-
-          const rect = panel.getBoundingClientRect();
-          const panelCenter = rect.top + rect.height / 2;
-          const viewportCenter = viewportHeight / 2;
-
-          // offset normalizado -1 … 1
-          const offset = (panelCenter - viewportCenter) / viewportHeight;
-          const dist = Math.min(Math.abs(offset) * 1.4, 1);
-
-          // Escala: más grande cuando está cerca del centro
-          const scale = 1.05 + (1 - dist) * 0.15;
-
-          // Desplazamiento vertical para efecto parallax
-          const translateY = offset * -40; // px (se mueve en dirección opuesta al scroll)
-
-          // Opacidad: se desvanece suavemente al alejarse
-          const opacity = 1 - dist * 0.35;
-
-          // Blur progresivo
-          const blur = dist * 10; // px
-
-          // Ligerísima rotación alternada para dar dinamismo
-          const direction = index % 2 === 0 ? 1 : -1;
-          const rotate = (1 - dist) * 1.2 * direction; // grados, pequeño
-
-          inner.style.transform =
-            `translateY(${translateY}px) scale(${scale}) rotate(${rotate}deg)`;
-          inner.style.opacity = opacity.toFixed(3);
-
-          img.style.filter = `blur(${blur.toFixed(1)}px) saturate(${1 + (1 - dist) * 0.25})`;
-
-          // Gradiente más intenso cuando la imagen está cerca del centro
-          const overlayOpacity = 0.15 + (1 - dist) * 0.45;
-          overlay.style.opacity = overlayOpacity.toFixed(3);
-
-          // Z-index para que la imagen más cercana “suba” sobre las demás
-          const zBase = 10;
-          const zBoost = Math.round((1 - dist) * 10);
-          panel.style.zIndex = zBase + zBoost;
-        });
-      }
-
-      window.addEventListener("scroll", onScroll, { passive: true });
-      window.addEventListener("resize", () => {
-        // Recalcular posiciones al cambiar el tamaño
-        updatePanels();
+        currentX += width + random(vw * 0.10, vw * 0.20);
       });
 
-      // Llamada inicial
-      updatePanels();
+      bgReady = true;
+      tryReveal();
     }
 
-    // ==========================
-    // INICIALIZACIÓN
-    // ==========================
+    /* ---------- FRENTE: mismo ajuste ---------- */
+    function loadFG() {
+      const count = Math.floor(random(7,12));
+      let done = 0;
 
-    document.addEventListener("DOMContentLoaded", () => {
-      createPanels();
-      // Esperar un pequeño tiempo para que algunas imágenes carguen
-      setTimeout(setupScrollEffects, 300);
+      for (let i = 0; i < count; i++) {
+        const img = document.createElement("img");
+        img.className = "alga alga-fg";
+        img.src = algaeSources[Math.floor(Math.random()*algaeSources.length)];
+        img.style.opacity = random(.50,.78);
+        if (Math.random() < .5) img.style.transform = "scaleX(-1)";
+        img.onload = () => { done++; if (done === count) layoutFG(); };
+        fgImages.push(img);
+        container.insertBefore(img, container.querySelector(".overlay"));
+      }
+    }
+
+    function layoutFG() {
+      if (!fgImages.length) return;
+
+      const vh = getVH();
+      const vw = getVW();
+
+      const totalHeight   = vh * 1.06;
+      const topOffset     = -vh * 0.06;
+      const segments      = fgImages.length - 1 || 1;
+      const segmentWidth  = vw / segments;
+
+      fgImages.forEach((img, i) => {
+        const ratio = img.naturalWidth / img.naturalHeight || 0.4;
+        const width = totalHeight * ratio * 1.05;
+
+        const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
+        const left   = center - width / 2;
+
+        img.style.height = totalHeight + "px";
+        img.style.width  = width + "px";
+        img.style.top    = topOffset + "px";
+        img.style.left   = left + "px";
+      });
+
+      fgReady = true;
+      tryReveal();
+    }
+
+    /* ---------- PARTÍCULAS ORGÁNICAS ---------- */
+    function createParticles() {
+      particlesContainer.innerHTML = "";
+
+      const palette = [
+        "rgba(200,230,240,0.40)",
+        "rgba(180,210,220,0.38)",
+        "rgba(160,200,210,0.34)",
+        "rgba(140,180,190,0.32)"
+      ];
+
+      const totalParticles = 150;
+
+      for (let i = 0; i < totalParticles; i++) {
+        const p = document.createElement("div");
+        p.className = "particle";
+
+        const w = random(2, 10);
+        const h = random(2, 10);
+        p.style.width  = w + "px";
+        p.style.height = h + "px";
+
+        const r1 = random(40, 90);
+        const r2 = random(40, 90);
+        const r3 = random(40, 90);
+        const r4 = random(40, 90);
+        p.style.borderRadius = `${r1}% ${r2}% ${r3}% ${r4}%`;
+
+        p.style.background = palette[Math.floor(Math.random() * palette.length)];
+
+        if (Math.random() > 0.10) {
+          p.style.filter = `blur(${random(0.5, 3)}px)`;
+        }
+
+        p.style.left = random(0, 100) + "vw";
+        p.style.top  = random(0, 100) + "vh";
+
+        p.style.setProperty("--driftX", random(3, 10) + "vw");
+        p.style.setProperty("--ampY",  random(-8, 8) + "px");
+
+        p.style.animationDuration = random(14, 30) + "s";
+        p.style.animationDelay    = random(-25, 0) + "s";
+
+        particlesContainer.appendChild(p);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      createSea();
+      createParticles();
+    });
+
+    window.addEventListener("resize", () => {
+      layoutBG();
+      layoutFG();
+      createParticles();
+    });
+
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => {
+        layoutBG();
+        layoutFG();
+        createParticles();
+      }, 300);
+    });
+  </script>
+
+  <script>
+    /* ===================== AUDIO ENGINE ICONO ===================== */
+
+    let audioCtx = null;
+    let masterGain = null;
+    let filter = null;
+
+    let running = false;
+    let userVolume = 0.45;
+    const MIN_VOL = 0.12;
+    const MAX_VOL = 0.7;
+
+    let bassVoices = [];
+    let activePads = [];
+    let padTimeoutId = null;
+
+    let leadOsc = null;
+    let leadGain = null;
+    let leadTimeoutId = null;
+
+    let noiseSource = null;
+    let noiseGain = null;
+    let noiseFilter = null;
+    let noiseTimeoutId = null;
+
+    const bassRoot = 55;
+    const pentatonicSteps = [0,2,4,7,9];
+
+    const speakerIcon = document.getElementById("speakerIcon");
+    const ringCircle = document.getElementById("ringCircle");
+    let ringLength = 0;
+
+    function randomPentatonicFreq() {
+      let semis = 24 + pentatonicSteps[Math.floor(Math.random()*pentatonicSteps.length)];
+      return bassRoot * Math.pow(2, semis/12);
+    }
+
+    function createContext() {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0;
+
+      filter = audioCtx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = 1000;
+      filter.Q.value = 0.7;
+
+      filter.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+
+      createBassLayer();
+      startPadLoop();
+      createLeadVoice();
+      createNoiseLayer();
+
+      masterGain.gain.linearRampToValueAtTime(userVolume, audioCtx.currentTime + 3);
+    }
+
+    function createBassLayer() {
+      [bassRoot, bassRoot*1.2].forEach((f,i)=>{
+        let osc = audioCtx.createOscillator();
+        let g = audioCtx.createGain();
+
+        osc.type="sine";
+        osc.frequency.value=f;
+
+        g.gain.value=0;
+        osc.connect(g);
+        g.connect(filter);
+
+        g.gain.linearRampToValueAtTime(0.12 + i*0.03, audioCtx.currentTime + 5 + i*1.5);
+        osc.start();
+
+        bassVoices.push({osc,g});
+      });
+    }
+
+    function spawnPadNote() {
+      if(!audioCtx) return;
+      const base = [196,220,246.94,261.63,293.66][Math.floor(Math.random()*5)];
+      let osc = audioCtx.createOscillator();
+      let g = audioCtx.createGain();
+      osc.type = Math.random()<0.5 ? "sine":"triangle";
+      osc.frequency.value = base;
+
+      g.gain.value = 0;
+      osc.connect(g);
+      g.connect(filter);
+
+      let now = audioCtx.currentTime;
+      let total = 1.4 + Math.random()*1.4;
+      let fin = 0.3 + Math.random()*0.5;
+      let fout = 0.4 + Math.random()*0.8;
+      let sus = Math.max(0.2,total-fin-fout);
+      let peak = 0.06 + Math.random()*0.05;
+
+      g.gain.linearRampToValueAtTime(peak, now+fin);
+      g.gain.linearRampToValueAtTime(peak, now+fin+sus);
+      g.gain.linearRampToValueAtTime(0, now+total);
+
+      osc.start();
+      osc.stop(now+total+0.2);
+
+      activePads.push(osc);
+    }
+
+    function scheduleNextPad(){
+      if(!running || !audioCtx) return;
+      spawnPadNote();
+      padTimeoutId = setTimeout(scheduleNextPad, 500+Math.random()*2000);
+    }
+
+    function startPadLoop(){
+      setTimeout(()=>{
+        if(running) scheduleNextPad();
+      },800);
+    }
+
+    function createLeadVoice(){
+      leadOsc = audioCtx.createOscillator();
+      leadGain = audioCtx.createGain();
+      leadOsc.type="triangle";
+      leadOsc.frequency.value = randomPentatonicFreq();
+      leadGain.gain.value = 0;
+
+      leadOsc.connect(leadGain);
+      leadGain.connect(filter);
+
+      leadGain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime+3);
+      leadOsc.start();
+      scheduleNextLeadStep();
+    }
+
+    function scheduleNextLeadStep(){
+      if(!running || !audioCtx) return;
+      let now = audioCtx.currentTime;
+      leadOsc.frequency.setValueAtTime(randomPentatonicFreq(), now);
+
+      let dur = 0.8 + Math.random()*2;
+      let newGain = 0.02 + Math.random()*0.02;
+      leadGain.gain.linearRampToValueAtTime(newGain, now + dur*0.5);
+
+      leadTimeoutId = setTimeout(scheduleNextLeadStep, dur*1000);
+    }
+
+    function createNoiseLayer(){
+      let buf = audioCtx.createBuffer(1, 2*audioCtx.sampleRate, audioCtx.sampleRate);
+      let data = buf.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.5;
+
+      noiseSource = audioCtx.createBufferSource();
+      noiseSource.buffer=buf;
+      noiseSource.loop=true;
+
+      noiseGain = audioCtx.createGain();
+      noiseGain.gain.value=0;
+
+      noiseFilter = audioCtx.createBiquadFilter();
+      noiseFilter.type="bandpass";
+      noiseFilter.frequency.value=1500;
+
+      noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(filter);
+
+      noiseSource.start();
+
+      noiseGain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime+3);
+      scheduleNextNoiseMod();
+    }
+
+    function scheduleNextNoiseMod(){
+      if(!running||!audioCtx) return;
+      let now = audioCtx.currentTime;
+      let t = 2 + Math.random()*3;
+      let g = 0.02 + Math.random()*0.05;
+
+      noiseGain.gain.linearRampToValueAtTime(g, now+t);
+      noiseTimeoutId = setTimeout(scheduleNextNoiseMod, t*1000);
+    }
+
+    function startSea(){
+      if(running) return;
+      running = true;
+      speakerIcon.classList.remove("muted");
+      speakerIcon.classList.add("active");
+
+      if(!audioCtx || audioCtx.state==="closed"){
+        createContext();
+      } else if(audioCtx.state==="suspended"){
+        audioCtx.resume();
+      }
+
+      masterGain.gain.linearRampToValueAtTime(userVolume, audioCtx.currentTime+2);
+    }
+
+    function stopSea(){
+      if(!running || !audioCtx) return;
+      running = false;
+
+      speakerIcon.classList.add("muted");
+      speakerIcon.classList.remove("active");
+
+      masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime+3);
+
+      if(padTimeoutId){clearTimeout(padTimeoutId); padTimeoutId=null;}
+      if(leadTimeoutId){clearTimeout(leadTimeoutId); leadTimeoutId=null;}
+      if(noiseTimeoutId){clearTimeout(noiseTimeoutId); noiseTimeoutId=null;}
+
+      setTimeout(()=>{
+        if(audioCtx){
+          audioCtx.close();
+          audioCtx=null;
+        }
+      },3500);
+    }
+
+    function initRing(){
+      let r = parseFloat(ringCircle.getAttribute("r"));
+      ringLength = 2 * Math.PI * r;
+      ringCircle.style.strokeDasharray = ringLength;
+      updateVolumeVisual();
+    }
+
+    function updateVolumeVisual(){
+      let ratio = (userVolume - MIN_VOL) / (MAX_VOL - MIN_VOL);
+      ratio = Math.max(0,Math.min(1,ratio));
+      ringCircle.style.strokeDashoffset = ringLength * (1-ratio);
+    }
+
+    function applyVolumeChange(){
+      if(!audioCtx||!masterGain) return;
+      masterGain.gain.linearRampToValueAtTime(userVolume, audioCtx.currentTime+0.15);
+      updateVolumeVisual();
+    }
+
+    let dragging=false;
+    let lastY=0;
+    let moved=false;
+    let activePointerId=null;
+
+    speakerIcon.addEventListener("dragstart", e => e.preventDefault());
+
+    speakerIcon.addEventListener("pointerdown", e=>{
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      e.preventDefault();
+      dragging=true;
+      moved=false;
+      lastY=e.clientY;
+      activePointerId=e.pointerId;
+      speakerIcon.setPointerCapture(e.pointerId);
+    });
+
+    speakerIcon.addEventListener("pointermove", e=>{
+      if(!dragging || e.pointerId !== activePointerId) return;
+
+      if (e.pointerType === "mouse" && !(e.buttons & 1)) {
+        dragging=false;
+        speakerIcon.releasePointerCapture(activePointerId);
+        activePointerId=null;
+        return;
+      }
+
+      let dy=e.clientY-lastY;
+      if(Math.abs(dy)>2) moved=true;
+      lastY=e.clientY;
+
+      userVolume = Math.max(MIN_VOL, Math.min(MAX_VOL, userVolume - dy*0.002));
+      applyVolumeChange();
+    });
+
+    function endPointer(e){
+      if(!dragging || e.pointerId !== activePointerId) return;
+      e.preventDefault();
+      dragging=false;
+      speakerIcon.releasePointerCapture(e.pointerId);
+      activePointerId=null;
+
+      if(!moved){
+        if(running) stopSea();
+        else startSea();
+      }
+    }
+
+    speakerIcon.addEventListener("pointerup", endPointer);
+    speakerIcon.addEventListener("pointercancel", endPointer);
+
+    window.addEventListener("load", ()=>{
+      initRing();
+      // Empieza muteado, se activa tocando el icono
     });
   </script>
 </body>
