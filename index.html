@@ -43,15 +43,40 @@
       transform-origin: 50% 100%;
       transform: translateZ(0);
     }
+
+    /* Algas del fondo desenfocadas */
     .alga-bg {
       z-index: 0;
-      /* Para evitar que se “corten” dentro de su caja: */
       object-fit: contain;
+      /* Fade en el último 20% inferior (se ve más fondo azul) */
+      -webkit-mask-image: linear-gradient(
+        to top,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,1) 20%
+      );
+      mask-image: linear-gradient(
+        to top,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,1) 20%
+      );
     }
+
+    /* Algas delanteras */
     .alga-fg {
       z-index: 1;
       filter: saturate(.95);
       animation: corrientePuppet 12s ease-in-out infinite;
+      /* Fade en el último ~10–12% inferior (entre 5–15%) */
+      -webkit-mask-image: linear-gradient(
+        to top,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,1) 12%
+      );
+      mask-image: linear-gradient(
+        to top,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,1) 12%
+      );
     }
 
     @keyframes corrientePuppet {
@@ -248,7 +273,7 @@
       height: 70%;
       object-fit: contain;
       filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));
-      animation: huePulse 5.8sease-in-out infinite alternate,
+      animation: huePulse 5.8s ease-in-out infinite alternate,
                  floatY 7.4s ease-in-out infinite;
       pointer-events: none;
       -webkit-user-drag: none;
@@ -306,23 +331,6 @@
     #speakerIcon.muted #ringCircle,
     #speakerIcon.active #ringCircle {
       animation: ringColorShift 12s ease-in-out infinite;
-    }
-
-    /* NIEBLA INFERIOR AZUL PROFUNDO */
-    .bottom-fog {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 8vh;
-      pointer-events: none;
-      z-index: 20;
-      background: linear-gradient(
-        to top,
-        rgba(3,18,40,1) 0%,
-        rgba(3,18,40,1) 37%,
-        rgba(3,18,40,0) 100%
-      );
     }
 
     /* ANIMACIÓN ESCALONADA TÍTULO / SUBTÍTULO / BOTONES */
@@ -404,9 +412,6 @@
     <img src="sonido/icono.png" alt="Audio marino" draggable="false">
   </div>
 
-  <!-- NIEBLA INFERIOR -->
-  <div class="bottom-fog"></div>
-
   <!-- SCRIPT FONDO MARINO -->
   <script>
     const algaeSources = [
@@ -460,14 +465,14 @@
       loadFG();
     }
 
-    /* FONDO (ALGAS DESENFOCADAS, CANTIDAD SEGÚN ORIENTACIÓN, SIN CORTARSE EN X) */
+    /* FONDO (ALGAS DESENFOCADAS, CANTIDAD SEGÚN ORIENTACIÓN) */
     function loadBG() {
       let baseCount;
       if (isPortrait()) {
-        // Pantalla vertical: 2–3 algas
+        // Pantalla vertical: 2–3 algas de fondo
         baseCount = Math.floor(random(2, 3.99));
       } else {
-        // Pantalla horizontal: 3–5 algas
+        // Pantalla horizontal: 3–5 algas de fondo
         baseCount = Math.floor(random(3, 5.99));
       }
       const count = Math.max(2, baseCount);
@@ -521,7 +526,6 @@
         let center = (index + 1) * segmentWidth;
         let left   = center - width / 2;
 
-        /* clamp para que nunca se salgan en X */
         if (left < marginLeft) left = marginLeft;
         if (left + width > vw - marginRight) left = vw - marginRight - width;
 
