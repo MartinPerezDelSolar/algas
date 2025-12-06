@@ -5,6 +5,11 @@
   <title>Fondo marino nostálgico</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Sugerencias anti-caché para el navegador -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <style>
     * {
       box-sizing: border-box;
@@ -28,7 +33,7 @@
       height: 100vh;
       overflow: hidden;
 
-      /* 👇 Elegante entrada: empieza invisible */
+      /* Entrada elegante: empieza invisible y ligeramente abajo */
       opacity: 0;
       transform: translateY(8px);
       transition:
@@ -51,12 +56,12 @@
       transform-origin: 50% 100%; /* ancladas abajo para el efecto puppet */
     }
 
-    /* Fondo — con blur + efecto agua */
+    /* Fondo — blur + efecto agua */
     .alga-bg {
       z-index: 0;
     }
 
-    /* Frente — con efecto de agua + puppet */
+    /* Frente — efecto agua + puppet */
     .alga-fg {
       z-index: 2;
       filter: saturate(0.95) url(#agua-suave);
@@ -203,7 +208,7 @@
     function tryRevealScene() {
       if (bgReady && fgReady && !hasRevealed) {
         hasRevealed = true;
-        // dejamos un frame para asegurar que todo esté pintado
+        // un frame para asegurar que todo esté pintado
         requestAnimationFrame(() => {
           container.classList.add("visible");
         });
@@ -222,6 +227,7 @@
 
     /* ----- FONDO ----- */
     function createBackgroundAlgae() {
+      // más algas en el fondo
       const count = Math.floor(random(10, 18));
       let loaded = 0;
 
@@ -286,6 +292,7 @@
 
     /* ----- FRENTE ----- */
     function createForegroundAlgae() {
+      // menos algas delante
       const count = Math.floor(random(7, 12));
       let loaded = 0;
 
@@ -304,7 +311,7 @@
         };
 
         fgImages.push(img);
-        // Insertar delante de overlay para que se vea bajo la atmósfera
+        // Insertar delante de overlay para que quede bajo la atmósfera
         container.insertBefore(img, container.querySelector(".overlay"));
       }
     }
