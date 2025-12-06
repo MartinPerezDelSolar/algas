@@ -82,7 +82,7 @@
       font-size: .85rem;
       letter-spacing: .24em;
       color: #a5f3fc;
-      margin-bottom: 1.3rem; /* más separación del bloque de botones */
+      margin-bottom: 1.3rem;
       text-transform: uppercase;
     }
 
@@ -106,11 +106,9 @@
       display: flex;
       align-items: center;
       cursor: pointer;
-
       box-shadow:
         0 2px 4px rgba(0,0,0,.35),
         0 0 0 1px rgba(15,23,42,.45);
-
       transition: background-color .18s, transform .13s,
                   box-shadow .18s, letter-spacing .13s;
     }
@@ -318,22 +316,22 @@
       animation: ringColorShift 12s ease-in-out infinite;
     }
 
-    /* NIEBLA INFERIOR CON COLOR DEL FONDO (no negro puro) */
-    .bottom-fog {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 8vh;
-      pointer-events: none;
-      z-index: 20;
-      background: linear-gradient(
-        to top,
-        rgba(2, 11, 13, 1) 0%,      /* mismo tono que el fondo al final (#020b0d aprox) */
-        rgba(2, 11, 13, 1) 37.5%,
-        rgba(2, 11, 13, 0) 100%
-      );
-    }
+/* NIEBLA INFERIOR AZUL OSCURO, COORDINADA CON EL FONDO */
+.bottom-fog {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8vh;
+  pointer-events: none;
+  z-index: 20;
+  background: linear-gradient(
+    to top,
+    rgba(3, 18, 26, 1) 0%,      /* azul muy oscuro, como el fondo del mar */
+    rgba(3, 18, 26, 1) 37.5%,   /* mantiene el color hasta ~8% de la pantalla */
+    rgba(3, 18, 26, 0) 100%     /* se desvanece a transparente hacia arriba */
+  );
+}
 
     /* ANIMACIÓN ESCALONADA TÍTULO / SUBTÍTULO / BOTONES */
     @keyframes fadeDown {
@@ -453,6 +451,18 @@
       }
     }
 
+    /* helper: elegir PNG de alga sin repetir con los dos anteriores */
+    function pickAlgaSrcNoCluster(prev1, prev2) {
+      let candidates = algaeSources.filter(s => s !== prev1 && s !== prev2);
+      if (!candidates.length) {
+        candidates = algaeSources.filter(s => s !== prev1);
+      }
+      if (!candidates.length) {
+        candidates = algaeSources.slice();
+      }
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
     function createSea() {
       container.querySelectorAll("img.alga").forEach(e => e.remove());
       bgImages = [];
@@ -472,10 +482,19 @@
       let done = 0;
       bgImages = [];
 
+      let prev1 = null;
+      let prev2 = null;
+
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
         img.className = "alga alga-bg";
-        img.src = algaeSources[Math.floor(Math.random()*algaeSources.length)];
+
+        const src = pickAlgaSrcNoCluster(prev1, prev2);
+        img.src = src;
+
+        prev2 = prev1;
+        prev1 = src;
+
         img.style.opacity = random(.22,.40);
         img.style.filter  = `blur(${random(1.2,3.2)}px) saturate(.8)`;
         if (Math.random() < .5) img.style.transform = "scaleX(-1)";
@@ -528,10 +547,19 @@
       let done = 0;
       fgImages = [];
 
+      let prev1 = null;
+      let prev2 = null;
+
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
         img.className = "alga alga-fg";
-        img.src = algaeSources[Math.floor(Math.random()*algaeSources.length)];
+
+        const src = pickAlgaSrcNoCluster(prev1, prev2);
+        img.src = src;
+
+        prev2 = prev1;
+        prev1 = src;
+
         img.style.opacity = random(.50,.78);
         if (Math.random() < .5) img.style.transform = "scaleX(-1)";
         img.onload = () => { done++; if (done === count) layoutFG(); };
@@ -646,14 +674,10 @@
     const MIN_VOL = 0.12;
     const MAX_VOL = 0.7;
 
-    let bassVoices = [];
-    let activePads = [];
     let padTimeoutId = null;
-
     let leadOsc = null;
     let leadGain = null;
     let leadTimeoutId = null;
-
     let noiseSource = null;
     let noiseGain = null;
     let noiseFilter = null;
@@ -667,7 +691,7 @@
     let ringLength = 0;
 
     function randomPentatonicFreq() {
-      let semis = 24 + pentatonicSteps[Math.floor(Math.random()*pentatonicSteps.length)];
+      const semis = 24 + pentatonicSteps[Math.floor(Math.random()*pentatonicSteps.length)];
       return bassRoot * Math.pow(2, semis/12);
     }
 
@@ -701,33 +725,31 @@
       createLeadVoice();
       createNoiseLayer();
 
-      smoothFadeTo(userVolume, 2.5);   // fade-in suave al iniciar
+      smoothFadeTo(userVolume, 2.5);
     }
 
     function createBassLayer() {
       [bassRoot, bassRoot*1.2].forEach((f,i)=>{
-        let osc = audioCtx.createOscillator();
-        let g = audioCtx.createGain();
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
 
-        osc.type="sine";
-        osc.frequency.value=f;
+        osc.type = "sine";
+        osc.frequency.value = f;
 
-        g.gain.value=0;
+        g.gain.value = 0;
         osc.connect(g);
         g.connect(filter);
 
         g.gain.linearRampToValueAtTime(0.12 + i*0.03, audioCtx.currentTime + 5 + i*1.5);
         osc.start();
-
-        bassVoices.push({osc,g});
       });
     }
 
     function spawnPadNote() {
       if(!audioCtx) return;
       const base = [196,220,246.94,261.63,293.66][Math.floor(Math.random()*5)];
-      let osc = audioCtx.createOscillator();
-      let g = audioCtx.createGain();
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
       osc.type = Math.random()<0.5 ? "sine":"triangle";
       osc.frequency.value = base;
 
@@ -735,12 +757,12 @@
       osc.connect(g);
       g.connect(filter);
 
-      let now = audioCtx.currentTime;
-      let total = 1.4 + Math.random()*1.4;
-      let fin = 0.3 + Math.random()*0.5;
-      let fout = 0.4 + Math.random()*0.8;
-      let sus = Math.max(0.2,total-fin-fout);
-      let peak = 0.06 + Math.random()*0.05;
+      const now = audioCtx.currentTime;
+      const total = 1.4 + Math.random()*1.4;
+      const fin = 0.3 + Math.random()*0.5;
+      const fout = 0.4 + Math.random()*0.8;
+      const sus = Math.max(0.2,total-fin-fout);
+      const peak = 0.06 + Math.random()*0.05;
 
       g.gain.linearRampToValueAtTime(peak, now+fin);
       g.gain.linearRampToValueAtTime(peak, now+fin+sus);
@@ -748,8 +770,6 @@
 
       osc.start();
       osc.stop(now+total+0.2);
-
-      activePads.push(osc);
     }
 
     function scheduleNextPad(){
@@ -767,7 +787,7 @@
     function createLeadVoice(){
       leadOsc = audioCtx.createOscillator();
       leadGain = audioCtx.createGain();
-      leadOsc.type="triangle";
+      leadOsc.type = "triangle";
       leadOsc.frequency.value = randomPentatonicFreq();
       leadGain.gain.value = 0;
 
@@ -781,31 +801,31 @@
 
     function scheduleNextLeadStep(){
       if(!running || !audioCtx) return;
-      let now = audioCtx.currentTime;
+      const now = audioCtx.currentTime;
       leadOsc.frequency.setValueAtTime(randomPentatonicFreq(), now);
 
-      let dur = 0.8 + Math.random()*2;
-      let newGain = 0.02 + Math.random()*0.02;
+      const dur = 0.8 + Math.random()*2;
+      const newGain = 0.02 + Math.random()*0.02;
       leadGain.gain.linearRampToValueAtTime(newGain, now + dur*0.5);
 
       leadTimeoutId = setTimeout(scheduleNextLeadStep, dur*1000);
     }
 
     function createNoiseLayer(){
-      let buf = audioCtx.createBuffer(1, 2*audioCtx.sampleRate, audioCtx.sampleRate);
-      let data = buf.getChannelData(0);
+      const buf = audioCtx.createBuffer(1, 2*audioCtx.sampleRate, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
       for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.5;
 
       noiseSource = audioCtx.createBufferSource();
-      noiseSource.buffer=buf;
-      noiseSource.loop=true;
+      noiseSource.buffer = buf;
+      noiseSource.loop = true;
 
       noiseGain = audioCtx.createGain();
-      noiseGain.gain.value=0;
+      noiseGain.gain.value = 0;
 
       noiseFilter = audioCtx.createBiquadFilter();
-      noiseFilter.type="bandpass";
-      noiseFilter.frequency.value=1500;
+      noiseFilter.type = "bandpass";
+      noiseFilter.frequency.value = 1500;
 
       noiseSource.connect(noiseFilter);
       noiseFilter.connect(noiseGain);
@@ -813,18 +833,16 @@
 
       noiseSource.start();
 
-      /* volumen base del ruido tipo televisor al 60% de lo que era */
-      noiseGain.gain.linearRampToValueAtTime(0.024, audioCtx.currentTime+3); // antes 0.04
+      noiseGain.gain.linearRampToValueAtTime(0.024, audioCtx.currentTime+3); // 60% del valor original
       scheduleNextNoiseMod();
     }
 
     function scheduleNextNoiseMod(){
-      if(!running||!audioCtx) return;
-      let now = audioCtx.currentTime;
-      let t = 2 + Math.random()*3;
-
-      /* antes: 0.02 + Math.random()*0.05 → ahora al 60% */
-      let g = (0.02 + Math.random()*0.05) * 0.6;
+      if(!running || !audioCtx) return;
+      const now = audioCtx.currentTime;
+      const t = 2 + Math.random()*3;
+      const base = 0.02 + Math.random()*0.05;
+      const g = base * 0.6;
 
       noiseGain.gain.linearRampToValueAtTime(g, now+t);
       noiseTimeoutId = setTimeout(scheduleNextNoiseMod, t*1000);
@@ -853,7 +871,7 @@
       speakerIcon.classList.add("muted");
       speakerIcon.classList.remove("active");
 
-      smoothFadeTo(0, 2.8);   // fade out elegante
+      smoothFadeTo(0, 2.8);
 
       if(padTimeoutId){clearTimeout(padTimeoutId); padTimeoutId=null;}
       if(leadTimeoutId){clearTimeout(leadTimeoutId); leadTimeoutId=null;}
@@ -868,7 +886,7 @@
     }
 
     function initRing(){
-      let r = parseFloat(ringCircle.getAttribute("r"));
+      const r = parseFloat(ringCircle.getAttribute("r"));
       ringLength = 2 * Math.PI * r;
       ringCircle.style.strokeDasharray = ringLength;
       updateVolumeVisual();
@@ -913,7 +931,7 @@
         return;
       }
 
-      let dy=e.clientY-lastY;
+      const dy=e.clientY-lastY;
       if(Math.abs(dy)>2) moved=true;
       lastY=e.clientY;
 
