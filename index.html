@@ -151,6 +151,79 @@
                   0 0 0 1px rgba(15,23,42,.9);
     }
 
+    /* ================== ANIMACIÓN ESCALONADA ENTRADA ================== */
+
+    /* Estado inicial: oculto y un poco abajo */
+    .name,
+    .subtitle,
+    .nav-button {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    @keyframes floatInUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @-webkit-keyframes floatInUp {
+      from {
+        opacity: 0;
+        -webkit-transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        -webkit-transform: translateY(0);
+      }
+    }
+
+    /* Cuando el mar ya está visible, disparamos las entradas en cascada */
+    .sea-container.visible .name {
+      animation: floatInUp 0.7s ease-out forwards;
+      -webkit-animation: floatInUp 0.7s ease-out forwards;
+      animation-delay: 0.10s;
+      -webkit-animation-delay: 0.10s;
+    }
+
+    .sea-container.visible .subtitle {
+      animation: floatInUp 0.7s ease-out forwards;
+      -webkit-animation: floatInUp 0.7s ease-out forwards;
+      animation-delay: 0.30s;
+      -webkit-animation-delay: 0.30s;
+    }
+
+    /* Botones dentro del nav (Bio, Porta, Cont, Fun) */
+    .sea-container.visible .nav-button:nth-child(1) {
+      animation: floatInUp 0.7s ease-out forwards;
+      -webkit-animation: floatInUp 0.7s ease-out forwards;
+      animation-delay: 0.45s;
+      -webkit-animation-delay: 0.45s;
+    }
+    .sea-container.visible .nav-button:nth-child(2) {
+      animation: floatInUp 0.7s ease-out forwards;
+      -webkit-animation: floatInUp 0.7s ease-out forwards;
+      animation-delay: 0.60s;
+      -webkit-animation-delay: 0.60s;
+    }
+    .sea-container.visible .nav-button:nth-child(3) {
+      animation: floatInUp 0.7s ease-out forwards;
+      -webkit-animation: floatInUp 0.7s ease-out forwards;
+      animation-delay: 0.75s;
+      -webkit-animation-delay: 0.75s;
+    }
+    .sea-container.visible .nav-button:nth-child(4) {
+      animation: floatInUp 0.7s ease-out forwards;
+      -webkit-animation: floatInUp 0.7s ease-out forwards;
+      animation-delay: 0.90s;
+      -webkit-animation-delay: 0.90s;
+    }
+
     /* PARTÍCULAS */
     .particles {
       position: absolute;
@@ -510,7 +583,7 @@
         const img = document.createElement("img");
         img.className = "alga alga-fg";
         img.src = algaeSources[Math.floor(Math.random()*algaeSources.length)];
-        img.style.opacity = random(.50,.78);
+          img.style.opacity = random(.50,.78);
         if (Math.random() < .5) img.style.transform = "scaleX(-1)";
         img.onload = () => { done++; if (done === count) layoutFG(); };
         fgImages.push(img);
