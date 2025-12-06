@@ -2,389 +2,344 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Fondo marino nostálgico</title>
+  <title>Fondo marino · Andrea Lértora</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Sugerencias anti-caché para el navegador -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
-      width: 100%;
       height: 100%;
       overflow: hidden;
       background:
         radial-gradient(circle at 10% 0%, #3f7f82 0%, #0b3a3e 35%, #020e10 80%),
         linear-gradient(to bottom, #083234, #020b0d);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #e5f3ff;
     }
 
     .sea-container {
       position: relative;
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
-
-      /* Entrada elegante */
       opacity: 0;
       transform: translateY(8px);
-      transition:
-        opacity 0.7s ease-out,
-        transform 0.7s ease-out;
+      transition: opacity .7s ease-out, transform .7s ease-out;
     }
-
     .sea-container.visible {
       opacity: 1;
       transform: translateY(0);
     }
 
-    /* ---------------------------------
-       ALGAS
-       --------------------------------- */
+    /* ALGA BASE */
     .alga {
       position: absolute;
-      object-fit: cover;
       pointer-events: none;
-      transform-origin: 50% 100%; /* ancladas abajo */
+      object-fit: cover;
+      transform-origin: 50% 100%;
     }
-
-    /* Fondo — solo blur + saturación (SIN displacement) */
-    .alga-bg {
-      z-index: 0;
-    }
-
-    /* Frente — SIN displacement, solo saturación + puppet */
+    .alga-bg { z-index: 0; }
     .alga-fg {
-      z-index: 2;
-      filter: saturate(0.95);
+      z-index: 1;
+      filter: saturate(.95);
       animation: corrientePuppet 12s ease-in-out infinite;
     }
 
-    /* Movimiento grupal de corriente de las algas */
     @keyframes corrientePuppet {
-      0%   { transform: translateY(0px) rotate(0deg) skewX(0deg); }
-      25%  { transform: translateY(-6px) rotate(0.5deg) skewX(1.5deg); }
-      50%  { transform: translateY(-12px) rotate(1.2deg) skewX(3deg); }
-      75%  { transform: translateY(-6px) rotate(0.4deg) skewX(1.5deg); }
-      100% { transform: translateY(0px) rotate(0deg) skewX(0deg); }
+      0% { transform: translateY(0) rotate(0deg) skewX(0deg); }
+      25% { transform: translateY(-6px) rotate(.5deg) skewX(1.5deg); }
+      50% { transform: translateY(-12px) rotate(1.2deg) skewX(3deg); }
+      75% { transform: translateY(-6px) rotate(.4deg) skewX(1.5deg); }
+      100% { transform: translateY(0) rotate(0deg) skewX(0deg); }
     }
 
-    /* ---------------------------------
-       PARTÍCULAS EN EL AGUA
-       --------------------------------- */
+    /* BLOQUE CENTRAL — AJUSTADO A 12vh */
+    .center-block {
+      position: absolute;
+      left: 8vw;
+      top: 12vh;   /* ← ← AQUÍ EL CAMBIO */
+      transform: translateY(30px);
+      opacity: 0;
+      z-index: 2;
+      transition: opacity .8s ease-out .1s, transform .8s ease-out .1s;
+    }
+    .sea-container.visible .center-block {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .name {
+      font-size: clamp(2.4rem, 4vw, 3.3rem);
+      text-transform: uppercase;
+      letter-spacing: .32em;
+      margin-bottom: .2rem;
+      color: #f9fafb;
+      text-shadow: 0 1px 0 rgba(0,0,0,.7), 0 18px 40px rgba(0,0,0,.9);
+    }
+    .subtitle {
+      font-size: .85rem;
+      letter-spacing: .24em;
+      color: #a5f3fc;
+      margin-bottom: .8rem;
+      text-transform: uppercase;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+    }
+
+    /* BOTONES 177px CON MULTIPLY */
+    .nav-button {
+      width: 177px;
+      padding: .20rem .75rem;
+      border: none;
+      border-radius: 3px;
+      background-color: rgba(80,200,190,.35);
+      mix-blend-mode: multiply;
+      color: #e5f3ff;
+      font-size: .7rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+
+      box-shadow:
+        0 2px 4px rgba(0,0,0,.35),
+        0 0 0 1px rgba(15,23,42,.45);
+
+      transition: background-color .18s, transform .13s,
+                  box-shadow .18s, letter-spacing .13s;
+    }
+
+    .nav-button:hover {
+      background-color: rgba(94,234,212,.42);
+      transform: translateX(2px);
+      letter-spacing: .20em;
+      box-shadow: 0 6px 14px rgba(0,0,0,.55),
+                  0 0 0 1px rgba(15,23,42,.65);
+    }
+
+    .nav-button:active {
+      background-color: rgba(45,164,150,.52);
+      transform: translateY(1px) scale(.99);
+      box-shadow: 0 1px 3px rgba(0,0,0,.6),
+                  0 0 0 1px rgba(15,23,42,.9);
+    }
+
+    /* PARTÍCULAS */
     .particles {
       position: absolute;
       inset: 0;
+      z-index: 3;
       pointer-events: none;
-      z-index: 3; /* sobre algas, bajo overlay */
-      overflow: hidden;
     }
 
     .particle {
       position: absolute;
       border-radius: 999px;
       mix-blend-mode: screen;
-      opacity: 0.25;
-      animation-name: particleCurrent;
-      animation-timing-function: ease-in-out;
-      animation-iteration-count: infinite;
-      animation-direction: alternate; /* va y viene con la corriente */
-      will-change: transform, opacity;
+      animation: particleCurrent ease-in-out infinite alternate;
     }
 
-    /* Corriente suave: se desplazan lateralmente y un poco en Y */
     @keyframes particleCurrent {
-      0% {
-        transform: translate3d(0, 0, 0);
-      }
-      50% {
-        transform: translate3d(var(--driftX), var(--ampY), 0);
-      }
-      100% {
-        transform: translate3d(0, 0, 0);
-      }
+      0% { transform: translate3d(0,0,0); }
+      50% { transform: translate3d(var(--driftX), var(--ampY), 0); }
+      100%{ transform: translate3d(0,0,0); }
     }
 
-    /* Overlay */
     .overlay {
       position: absolute;
       inset: 0;
+      z-index: 4;
       pointer-events: none;
       background:
-        radial-gradient(circle at 50% 15%, rgba(255,255,220,0.08) 0, transparent 55%),
-        linear-gradient(to bottom, rgba(10,35,45,0.50), rgba(0,0,0,0.75));
+        radial-gradient(circle at 50% 15%, rgba(255,255,220,.08), transparent),
+        linear-gradient(to bottom, rgba(10,35,45,.50), rgba(0,0,0,.75));
       mix-blend-mode: soft-light;
-      z-index: 4;
     }
 
-    /* Grano */
     .grain {
       position: absolute;
       inset: 0;
-      pointer-events: none;
-      opacity: 0.16;
-      mix-blend-mode: soft-light;
       z-index: 5;
+      opacity: .16;
+      mix-blend-mode: soft-light;
+      pointer-events: none;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
     }
   </style>
 </head>
 
+
 <body>
   <div class="sea-container" id="sea-container">
-    <!-- Partículas flotando en el agua -->
-    <div class="particles" id="particles-layer"></div>
 
+    <!-- BLOQUE CON TÍTULO y BOTONES -->
+    <div class="center-block">
+      <div class="name">Andrea&nbsp;Lértora</div>
+      <div class="subtitle">artista plástica</div>
+
+      <nav class="nav">
+        <button class="nav-button">Bio</button>
+        <button class="nav-button">Porta</button>
+        <button class="nav-button">Cont</button>
+        <button class="nav-button">Fun</button>
+      </nav>
+    </div>
+
+    <div class="particles" id="particles-layer"></div>
     <div class="overlay"></div>
     <div class="grain"></div>
   </div>
 
-  <!-- ------------------------------------
-       JAVASCRIPT
-       ------------------------------------ -->
   <script>
     const algaeSources = [
-      "algas/algas 1.png",
-      "algas/algas 2.png",
-      "algas/algas 3.png",
-      "algas/algas 4.png",
-      "algas/algas 5.png"
+      "algas/algas 1.png","algas/algas 2.png","algas/algas 3.png",
+      "algas/algas 4.png","algas/algas 5.png"
     ];
 
     const container = document.getElementById("sea-container");
     const particlesContainer = document.getElementById("particles-layer");
+    let bgImages=[], fgImages=[];
+    let bgReady=false, fgReady=false, revealed=false;
 
-    let bgImages = [];
-    let fgImages = [];
+    const random=(a,b)=>a+Math.random()*(b-a);
 
-    // flags para entrada elegante
-    let bgReady = false;
-    let fgReady = false;
-    let hasRevealed = false;
-
-    function random(min, max) {
-      return min + Math.random() * (max - min);
-    }
-
-    function resetRevealState() {
-      bgReady = false;
-      fgReady = false;
-      hasRevealed = false;
-      container.classList.remove("visible");
-    }
-
-    function tryRevealScene() {
-      if (bgReady && fgReady && !hasRevealed) {
-        hasRevealed = true;
-        requestAnimationFrame(() => {
-          container.classList.add("visible");
-        });
+    function tryReveal(){
+      if(bgReady && fgReady && !revealed){
+        revealed=true;
+        container.classList.add("visible");
       }
     }
 
-    function createSea() {
-      container.querySelectorAll("img.alga").forEach(img => img.remove());
-      bgImages = [];
-      fgImages = [];
-
-      resetRevealState();
-      createBackgroundAlgae();
-      createForegroundAlgae();
+    function createSea(){
+      container.querySelectorAll("img.alga").forEach(e=>e.remove());
+      bgImages=[]; fgImages=[];
+      bgReady=fgReady=revealed=false;
+      container.classList.remove("visible");
+      loadBG(); loadFG();
     }
 
-    /* ----- FONDO ----- */
-    function createBackgroundAlgae() {
-      const count = Math.floor(random(10, 18));
-      let loaded = 0;
+    function loadBG(){
+      const count=Math.floor(random(10,18));
+      let done=0;
 
-      for (let i = 0; i < count; i++) {
-        const src = algaeSources[Math.floor(Math.random() * algaeSources.length)];
-        const img = document.createElement("img");
-        img.className = "alga alga-bg";
-        img.src = src;
-
-        img.style.opacity = random(0.22, 0.40).toFixed(2);
-
-        const blur = random(1.2, 3.2);
-        img.style.filter = `blur(${blur.toFixed(1)}px) saturate(0.8)`; // SIN displacement
-
-        if (Math.random() < 0.5) img.style.transform = "scaleX(-1)";
-
-        img.onload = () => {
-          loaded++;
-          if (loaded === count) layoutBackgroundAlgae();
-        };
-
+      for(let i=0;i<count;i++){
+        const img=document.createElement("img");
+        img.className="alga alga-bg";
+        img.src=algaeSources[Math.floor(Math.random()*algaeSources.length)];
+        img.style.opacity=random(.22,.40);
+        img.style.filter=`blur(${random(1.2,3.2)}px) saturate(.8)`;
+        if(Math.random()<.5) img.style.transform="scaleX(-1)";
+        img.onload=()=>{ done++; if(done===count) layoutBG(); };
         bgImages.push(img);
         container.insertBefore(img, container.firstChild);
       }
     }
 
-    function layoutBackgroundAlgae() {
-      if (!bgImages.length) return;
+    function layoutBG(){
+      const vh=innerHeight, vw=innerWidth;
+      const h=vh*1.10, top=-vh*.10;
+      let x=random(vw*.05, vw*.1);
 
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
+      bgImages.forEach(img=>{
+        const r=img.naturalWidth/img.naturalHeight || .4;
+        let w=vh*r*.95;
+        if(w>vw*.35) w=vw*.35;
+        if(x+w > vw-vw*.05){ img.remove(); return; }
 
-      const totalHeight = vh * 1.10;  // 110% de la pantalla
-      const topOffset  = -vh * 0.10;  // subimos 10% para ocultar un poco la base
+        img.style.height=h+"px";
+        img.style.width=w+"px";
+        img.style.left=x+"px";
+        img.style.top=top+"px";
 
-      let currentX = random(0.05 * vw, 0.1 * vw);
-
-      bgImages.forEach(img => {
-        const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-
-        let width = vh * ratio * 0.95;
-        const maxWidth = vw * 0.35;
-        if (width > maxWidth) width = maxWidth;
-
-        if (currentX + width > vw - 0.05 * vw) {
-          img.remove();
-          return;
-        }
-
-        img.style.height = totalHeight + "px";
-        img.style.width  = width + "px";
-        img.style.top    = topOffset + "px";
-        img.style.left   = currentX + "px";
-
-        const gap = random(0.10 * vw, 0.20 * vw);
-        currentX += width + gap;
+        x+=w+random(vw*.1, vw*.2);
       });
 
-      bgReady = true;
-      tryRevealScene();
+      bgReady=true;
+      tryReveal();
     }
 
-    /* ----- FRENTE ----- */
-    function createForegroundAlgae() {
-      const count = Math.floor(random(7, 12));
-      let loaded = 0;
+    function loadFG(){
+      const count=Math.floor(random(7,12));
+      let done=0;
 
-      for (let i = 0; i < count; i++) {
-        const src = algaeSources[Math.floor(Math.random() * algaeSources.length)];
-        const img = document.createElement("img");
-        img.className = "alga alga-fg";
-        img.src = src;
-
-        img.style.opacity = random(0.50, 0.78).toFixed(2);
-        if (Math.random() < 0.5) img.style.transform = "scaleX(-1)";
-
-        img.onload = () => {
-          loaded++;
-          if (loaded === count) layoutForegroundAlgae();
-        };
-
+      for(let i=0;i<count;i++){
+        const img=document.createElement("img");
+        img.className="alga alga-fg";
+        img.src=algaeSources[Math.floor(Math.random()*algaeSources.length)];
+        img.style.opacity=random(.50,.78);
+        if(Math.random()<.5) img.style.transform="scaleX(-1)";
+        img.onload=()=>{ done++; if(done===count) layoutFG(); };
         fgImages.push(img);
         container.insertBefore(img, container.querySelector(".overlay"));
       }
     }
 
-    function layoutForegroundAlgae() {
-      if (!fgImages.length) return;
+    function layoutFG(){
+      const vh=innerHeight, vw=innerWidth;
+      const h=vh*1.10, top=-vh*.10;
+      const seg=fgImages.length-1 || 1;
+      const sw=vw/seg;
 
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
-
-      const segments = fgImages.length - 1 || 1;
-      const segmentWidth = vw / segments;
-
-      const totalHeight = vh * 1.10;
-      const topOffset  = -vh * 0.10;
-
-      fgImages.forEach((img, i) => {
-        const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        const width = vh * ratio * 1.08;
-
-        const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
-        const left   = center - width / 2;
-
-        img.style.height = totalHeight + "px";
-        img.style.width  = width + "px";
-        img.style.left   = left + "px";
-        img.style.top    = topOffset + "px";
+      fgImages.forEach((img,i)=>{
+        const r=img.naturalWidth/img.naturalHeight || .4;
+        const w=vh*r*1.08;
+        const cx=i*sw+random(-sw*.15, sw*.15);
+        img.style.height=h+"px";
+        img.style.width=w+"px";
+        img.style.left=(cx-w/2)+"px";
+        img.style.top=top+"px";
       });
 
-      fgReady = true;
-      tryRevealScene();
+      fgReady=true;
+      tryReveal();
     }
 
-    /* ----- PARTÍCULAS ----- */
-    function createParticles() {
-      if (!particlesContainer) return;
-
-      particlesContainer.innerHTML = "";
-
-      const count = 60;
-      const palette = [
-        "rgba(230,245,255,0.85)",
-        "rgba(200,225,240,0.80)",
-        "rgba(180,210,220,0.75)",
-        "rgba(160,205,210,0.70)"
+    function createParticles(){
+      particlesContainer.innerHTML="";
+      const palette=[
+        "rgba(230,245,255,.85)",
+        "rgba(200,225,240,.80)",
+        "rgba(180,210,220,.75)",
+        "rgba(160,205,210,.70)"
       ];
 
-      for (let i = 0; i < count; i++) {
-        const p = document.createElement("div");
-        p.className = "particle";
+      for(let i=0;i<60;i++){
+        const p=document.createElement("div");
+        p.className="particle";
+        const s=random(2,7);
+        p.style.width=p.style.height=s+"px";
+        p.style.background=palette[Math.floor(Math.random()*palette.length)];
+        if(s>4) p.style.filter=`blur(${random(.5,1.8)}px)`;
 
-        // Tamaño variado
-        const size = random(2, 7);
-        p.style.width = size + "px";
-        p.style.height = size + "px";
+        p.style.left=random(0,100)+"vw";
+        p.style.top=random(0,100)+"vh";
+        p.style.setProperty("--driftX", random(4,14)+"vw");
+        p.style.setProperty("--ampY", random(-10,10)+"px");
 
-        // Color variado (no todas blancas)
-        const color = palette[Math.floor(Math.random() * palette.length)];
-        p.style.background = color;
-
-        // Algunas más grandes con blur suave
-        if (size > 4) {
-          const blur = random(0.5, 1.8).toFixed(2);
-          p.style.filter = `blur(${blur}px)`;
-        }
-
-        // Posición inicial aleatoria
-        const left = random(0, 100);
-        const top = random(0, 100);
-        p.style.left = left + "vw";
-        p.style.top = top + "vh";
-
-        // Corriente: de izquierda a derecha con ligera variación vertical
-        const driftX = random(4, 14).toFixed(1) + "vw";   // cuánto se desplaza lateralmente
-        const ampY = random(-10, 10).toFixed(1) + "px";   // pequeño bamboleo vertical
-
-        p.style.setProperty("--driftX", driftX);
-        p.style.setProperty("--ampY", ampY);
-
-        // Duración y delay para que no vayan todas sincronizadas
-        const dur = random(16, 32).toFixed(1) + "s";
-        const delay = random(-32, 0).toFixed(1) + "s";
-
-        p.style.animationDuration = dur;
-        p.style.animationDelay = delay;
-
-        // Opacidad sutil y variada
-        p.style.opacity = random(0.10, 0.40).toFixed(2);
+        p.style.animationDuration=random(16,32)+"s";
+        p.style.animationDelay=random(-32,0)+"s";
 
         particlesContainer.appendChild(p);
       }
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded",()=>{
       createSea();
       createParticles();
     });
 
-    window.addEventListener("resize", () => {
-      layoutBackgroundAlgae();
-      layoutForegroundAlgae();
+    window.addEventListener("resize",()=>{
+      layoutBG();
+      layoutFG();
       createParticles();
     });
   </script>
