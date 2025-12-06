@@ -5,7 +5,7 @@
   <title>Fondo marino nostálgico</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Sugerencias anti-caché -->
+  <!-- Sugerencias anti-caché para el navegador -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -54,27 +54,27 @@
       object-fit: cover;
       pointer-events: none;
       transform-origin: 50% 100%; /* ancladas abajo */
-      will-change: transform;
     }
 
-    /* Fondo — desenfocadas, más suaves */
+    /* Fondo — solo blur + saturación (SIN displacement) */
     .alga-bg {
       z-index: 0;
-      filter: blur(2px) saturate(0.8);
     }
 
-    /* Frente — con movimiento de corriente */
+    /* Frente — SIN displacement, solo saturación + puppet */
     .alga-fg {
       z-index: 2;
-      animation: corrienteSuave 10s ease-in-out infinite;
+      filter: saturate(0.95);
+      animation: corrientePuppet 12s ease-in-out infinite;
     }
 
-    @keyframes corrienteSuave {
-      0%   { transform: translateY(0px) skewX(0deg); }
-      25%  { transform: translateY(-6px) skewX(1.5deg); }
-      50%  { transform: translateY(-10px) skewX(3deg); }
-      75%  { transform: translateY(-6px) skewX(1.5deg); }
-      100% { transform: translateY(0px) skewX(0deg); }
+    /* Movimiento grupal de corriente */
+    @keyframes corrientePuppet {
+      0%   { transform: translateY(0px) rotate(0deg) skewX(0deg); }
+      25%  { transform: translateY(-6px) rotate(0.5deg) skewX(1.5deg); }
+      50%  { transform: translateY(-12px) rotate(1.2deg) skewX(3deg); }
+      75%  { transform: translateY(-6px) rotate(0.4deg) skewX(1.5deg); }
+      100% { transform: translateY(0px) rotate(0deg) skewX(0deg); }
     }
 
     /* ---------------------------------
@@ -91,42 +91,45 @@
     .particle {
       position: absolute;
       border-radius: 999px;
-      background: rgba(230, 245, 255, 0.8);
+      background: rgba(230, 245, 255, 0.7);
       mix-blend-mode: screen;
-      opacity: 0.2;
+      opacity: 0.25;
       animation-name: floatParticle;
       animation-timing-function: linear;
       animation-iteration-count: infinite;
-      will-change: transform, opacity;
+      will-change: transform;
     }
 
     @keyframes floatParticle {
       0% {
         transform: translate3d(0, 0, 0);
-        opacity: 0;
-      }
-      10% {
-        opacity: 0.25;
-      }
-      90% {
-        opacity: 0.25;
       }
       100% {
         transform: translate3d(var(--dx, 0px), -120vh, 0);
-        opacity: 0;
       }
     }
 
-    /* Overlay suave (sin grain pesado) */
+    /* Overlay */
     .overlay {
       position: absolute;
       inset: 0;
       pointer-events: none;
       background:
         radial-gradient(circle at 50% 15%, rgba(255,255,220,0.08) 0, transparent 55%),
-        linear-gradient(to bottom, rgba(10,35,45,0.45), rgba(0,0,0,0.7));
+        linear-gradient(to bottom, rgba(10,35,45,0.50), rgba(0,0,0,0.75));
       mix-blend-mode: soft-light;
       z-index: 4;
+    }
+
+    /* Grano */
+    .grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.16;
+      mix-blend-mode: soft-light;
+      z-index: 5;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
     }
   </style>
 </head>
@@ -137,7 +140,10 @@
     <div class="particles" id="particles-layer"></div>
 
     <div class="overlay"></div>
+    <div class="grain"></div>
   </div>
+
+  <!-- (OJO: ya no hay filtro SVG, se quitó el displacement) -->
 
   <!-- ------------------------------------
        JAVASCRIPT
@@ -194,7 +200,7 @@
 
     /* ----- FONDO ----- */
     function createBackgroundAlgae() {
-      const count = Math.floor(random(8, 14)); // un poco menos que antes
+      const count = Math.floor(random(10, 18));
       let loaded = 0;
 
       for (let i = 0; i < count; i++) {
@@ -203,7 +209,10 @@
         img.className = "alga alga-bg";
         img.src = src;
 
-        img.style.opacity = random(0.25, 0.45).toFixed(2);
+        img.style.opacity = random(0.22, 0.40).toFixed(2);
+
+        const blur = random(1.2, 3.2);
+        img.style.filter = `blur(${blur.toFixed(1)}px) saturate(0.8)`; // SIN url(#agua-suave)
 
         if (Math.random() < 0.5) img.style.transform = "scaleX(-1)";
 
@@ -223,15 +232,15 @@
       const vh = window.innerHeight;
       const vw = window.innerWidth;
 
-      const totalHeight = vh * 1.05;  // un poquito más que la pantalla
-      const topOffset  = -vh * 0.05;  // subidas 5%
+      const totalHeight = vh * 1.10;  // 110% de la pantalla
+      const topOffset  = -vh * 0.10;  // subimos 10% para ocultar un poco la base
 
       let currentX = random(0.05 * vw, 0.1 * vw);
 
       bgImages.forEach(img => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
 
-        let width = vh * ratio * 0.9;
+        let width = vh * ratio * 0.95;
         const maxWidth = vw * 0.35;
         if (width > maxWidth) width = maxWidth;
 
@@ -255,7 +264,7 @@
 
     /* ----- FRENTE ----- */
     function createForegroundAlgae() {
-      const count = Math.floor(random(6, 10)); // menos para aligerar
+      const count = Math.floor(random(7, 12));
       let loaded = 0;
 
       for (let i = 0; i < count; i++) {
@@ -264,7 +273,7 @@
         img.className = "alga alga-fg";
         img.src = src;
 
-        img.style.opacity = random(0.55, 0.8).toFixed(2);
+        img.style.opacity = random(0.50, 0.78).toFixed(2);
         if (Math.random() < 0.5) img.style.transform = "scaleX(-1)";
 
         img.onload = () => {
@@ -286,12 +295,12 @@
       const segments = fgImages.length - 1 || 1;
       const segmentWidth = vw / segments;
 
-      const totalHeight = vh * 1.05;
-      const topOffset  = -vh * 0.05;
+      const totalHeight = vh * 1.10;
+      const topOffset  = -vh * 0.10;
 
       fgImages.forEach((img, i) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        const width = vh * ratio * 1.0;
+        const width = vh * ratio * 1.08;
 
         const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
         const left   = center - width / 2;
@@ -312,12 +321,12 @@
 
       particlesContainer.innerHTML = "";
 
-      const count = 35; // menos partículas para iPad
+      const count = 60;
       for (let i = 0; i < count; i++) {
         const p = document.createElement("div");
         p.className = "particle";
 
-        const size = random(2, 4);
+        const size = random(2, 5);
         p.style.width = size + "px";
         p.style.height = size + "px";
 
@@ -326,15 +335,15 @@
         p.style.left = left + "vw";
         p.style.top = startY + "vh";
 
-        const dx = random(-14, 14).toFixed(1) + "px";
+        const dx = random(-16, 16).toFixed(1) + "px";
         p.style.setProperty("--dx", dx);
 
-        const dur = random(20, 40).toFixed(1) + "s";
-        const delay = random(-40, 0).toFixed(1) + "s";
+        const dur = random(18, 36).toFixed(1) + "s";
+        const delay = random(-36, 0).toFixed(1) + "s";
 
         p.style.animationDuration = dur;
         p.style.animationDelay = delay;
-        p.style.opacity = random(0.1, 0.35).toFixed(2);
+        p.style.opacity = random(0.12, 0.40).toFixed(2);
 
         particlesContainer.appendChild(p);
       }
