@@ -12,37 +12,14 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html, body {
-  height: 100%;
-  overflow: hidden;
-  /* Fondo de mar:
-     - Arriba: naranja suave + turquesa luminoso
-     - Medio: azul verdoso
-     - Abajo: azul muy oscuro */
-  background:
-    linear-gradient(
-      to bottom,
-      #ffb678 0%,    /* toque naranja suave, luz arriba */
-      #4fd2c3 1%,   /* turquesa luminoso cerca de la superficie */
-      #1b6f81 40%,   /* azul verdoso intermedio */
-      #041625 60%   /* fondo de mar muy oscuro abajo */
-    );
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #e5f3ff;
-}
-
-    /* Capa de fundido de entrada */
-    .intro-fade {
-      position: fixed;
-      inset: 0;
-      background: #02070b;
-      z-index: 9999;
-      opacity: 1;
-      pointer-events: none;
-      transition: opacity 0.9s ease-out;
-    }
-    .intro-fade.hidden {
-      opacity: 0;
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 10% 0%, #3f7f82 0%, #0b3a3e 35%, #020e10 80%),
+        linear-gradient(to bottom, #083234, #020b0d);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #e5f3ff;
     }
 
     .sea-container {
@@ -67,21 +44,18 @@ html, body {
       transform: translateZ(0);
     }
     .alga-bg { z-index: 0; }
-
     .alga-fg {
       z-index: 1;
       filter: saturate(.95);
-      /* variable para flip horizontal */
-      --flipX: 1;
       animation: corrientePuppet 12s ease-in-out infinite;
     }
 
     @keyframes corrientePuppet {
-      0%   { transform: scaleX(var(--flipX)) translateY(0) rotate(0deg) skewX(0deg); }
-      25%  { transform: scaleX(var(--flipX)) translateY(-6px) rotate(.4deg) skewX(1.2deg); }
-      50%  { transform: scaleX(var(--flipX)) translateY(-10px) rotate(.9deg) skewX(2.4deg); }
-      75%  { transform: scaleX(var(--flipX)) translateY(-5px) rotate(.3deg) skewX(1.0deg); }
-      100% { transform: scaleX(var(--flipX)) translateY(0) rotate(0deg) skewX(0deg); }
+      0%   { transform: translateY(0) rotate(0deg) skewX(0deg); }
+      25%  { transform: translateY(-6px) rotate(.4deg) skewX(1.2deg); }
+      50%  { transform: translateY(-10px) rotate(.9deg) skewX(2.4deg); }
+      75%  { transform: translateY(-5px) rotate(.3deg) skewX(1.0deg); }
+      100% { transform: translateY(0) rotate(0deg) skewX(0deg); }
     }
 
     /* BLOQUE CENTRAL — TÍTULO Y BOTONES */
@@ -89,14 +63,7 @@ html, body {
       position: absolute;
       left: 8vw;
       top: 12vh;
-      transform: translateY(30px);
-      opacity: 0;
-      z-index: 6;
-      transition: opacity .8s ease-out .1s, transform .8s ease-out .1s;
-    }
-    .sea-container.visible .center-block {
-      opacity: 1;
-      transform: translateY(0);
+      z-index: 2;
     }
 
     .name {
@@ -115,7 +82,7 @@ html, body {
       font-size: .85rem;
       letter-spacing: .24em;
       color: #a5f3fc;
-      margin-bottom: .8rem;
+      margin-bottom: 1.3rem;
       text-transform: uppercase;
     }
 
@@ -139,11 +106,9 @@ html, body {
       display: flex;
       align-items: center;
       cursor: pointer;
-
       box-shadow:
         0 2px 4px rgba(0,0,0,.35),
         0 0 0 1px rgba(15,23,42,.45);
-
       transition: background-color .18s, transform .13s,
                   box-shadow .18s, letter-spacing .13s;
     }
@@ -161,14 +126,6 @@ html, body {
       transform: translateY(1px) scale(.99);
       box-shadow: 0 1px 3px rgba(0,0,0,.6),
                   0 0 0 1px rgba(15,23,42,.9);
-    }
-
-    /* NUEVA ANIMACIÓN ESCALONADA (JS + TRANSITION) */
-    .center-block .name,
-    .center-block .subtitle,
-    .center-block .nav-button {
-      transform: translateY(-18px);
-      opacity: 0;
     }
 
     /* PARTÍCULAS */
@@ -192,24 +149,6 @@ html, body {
       100% { transform: translate3d(0,0,0); }
     }
 
-    /* NEBLINA OSCURA EN LA PARTE DE ABAJO PARA TAPAR LA BASE */
-    .bottom-fade {
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      height: 15vh;
-      z-index: 2;
-      pointer-events: none;
-      background: linear-gradient(
-        to top,
-        rgba(0, 8, 10, 0.95) 0%,
-        rgba(0, 15, 20, 0.85) 30%,
-        rgba(0, 25, 35, 0.60) 65%,
-        rgba(0, 30, 40, 0.0) 100%
-      );
-    }
-
     .overlay {
       position: absolute;
       inset: 0;
@@ -221,75 +160,84 @@ html, body {
       mix-blend-mode: soft-light;
     }
 
+    .grain {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      opacity: .16;
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
+    }
+
+    /* BOTONES 30% MÁS GRANDES EN CELULARES / IPAD */
     @media (max-width: 768px) {
       .center-block {
         left: 6vw;
         top: 10vh;
       }
+
       .name {
         font-size: clamp(2rem, 6vw, 2.6rem);
-        letter-spacing: 0.26em;
+        letter-spacing: .26em;
         flex-direction: column;
-        gap: 0.05em;
+        gap: .05em;
       }
+
       .subtitle {
-        font-size: 0.8rem;
-        letter-spacing: 0.20em;
-        margin-bottom: 0.7rem;
+        font-size: .8rem;
+        letter-spacing: .20em;
+        margin-bottom: 1.1rem;
       }
+
       .nav-button {
-        width: 177px;
-        padding: 0.22rem 0.75rem;
+        width: calc(177px * 1.3);
+        padding: calc(.20rem * 1.3) calc(.75rem * 1.3);
+        font-size: calc(.7rem * 1.3);
       }
     }
 
-    /* ======================= ICONO DE AUDIO ======================= */
-
+    /* ICONO DE SONIDO — 7% MÁS PEQUEÑO */
     #speakerIcon {
       position: fixed;
       bottom: 40px;
       right: 40px;
-      width: min(7vw, 7vh);
-      height: min(7vw, 7vh);
-      min-width: 42px;
-      min-height: 42px;
-      max-width: 80px;
-      max-height: 80px;
+      width: min(6.51vw, 6.51vh);
+      height: min(6.51vw, 6.51vh);
+      min-width: 39px;
+      min-height: 39px;
+      max-width: 74px;
+      max-height: 74px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       backdrop-filter: blur(10px);
-      box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 0 25px rgba(0,0,0,0.8);
       opacity: 0.85;
-      transition: opacity 0.2s ease;
-      z-index: 20;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 30;
       touch-action: none;
       user-select: none;
       -webkit-user-drag: none;
     }
 
-    #speakerIcon:hover { opacity: 0.85; }
-    #speakerIcon:active { transform: scale(0.95); }
+    #speakerIcon:hover { opacity: .85; }
+    #speakerIcon:active { transform: scale(.95); }
 
+    /* Tintineo con fade elegante */
     @keyframes attentionBlink {
-      0%, 5%   { opacity: 0.55; }
-      6%       { opacity: 1; }
-      8%       { opacity: 0.4; }
-      9%       { opacity: 1; }
-      11%      { opacity: 0.4; }
-      12%      { opacity: 1; }
-      100%     { opacity: 0.6; }
+      0% { opacity: .55; }
+      8% { opacity: 1; }
+      16% { opacity: .35; }
+      24% { opacity: 1; }
+      32% { opacity: .35; }
+      40% { opacity: 1; }
+      100% { opacity: .55; }
     }
-
-    #speakerIcon.muted {
-      animation: attentionBlink 7s ease-in-out infinite;
-    }
-
-    #speakerIcon.active {
-      animation: none;
-    }
+    #speakerIcon.muted { animation: attentionBlink 7s ease-in-out infinite; }
+    #speakerIcon.active { animation: none; }
 
     #speakerIcon img {
       width: 70%;
@@ -299,38 +247,36 @@ html, body {
       animation: huePulse 5.8s ease-in-out infinite alternate,
                  floatY 7.4s ease-in-out infinite;
       pointer-events: none;
-      user-select: none;
       -webkit-user-drag: none;
     }
 
     #speakerIcon.active img {
       animation-duration: 4.8s, 6.2s;
     }
-
     #speakerIcon.muted img {
       animation-duration: 7.5s, 8.5s;
       opacity: 0.9;
     }
 
     @keyframes huePulse {
-      0% { filter: hue-rotate(0deg) saturate(1.0) drop-shadow(0 0 5px rgba(0,0,0,0.7)); }
-      50% { filter: hue-rotate(12deg) saturate(1.25) drop-shadow(0 0 7px rgba(0,0,0,0.9)); }
-      100% { filter: hue-rotate(-10deg) saturate(1.1) drop-shadow(0 0 5px rgba(0,0,0,0.7)); }
+      0% { filter: hue-rotate(0deg) saturate(1) drop-shadow(0 0 5px rgba(0,0,0,.7)); }
+      50% { filter: hue-rotate(12deg) saturate(1.25) drop-shadow(0 0 7px rgba(0,0,0,.9)); }
+      100% { filter: hue-rotate(-10deg) saturate(1.1) drop-shadow(0 0 5px rgba(0,0,0,.7)); }
     }
 
     @keyframes floatY {
-      0%   { transform: translateY(0); }
-      50%  { transform: translateY(-3px); }
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
       100% { transform: translateY(0); }
     }
 
     .ring {
       position: absolute;
-      inset: -30%;
+      inset: -28%;
+      pointer-events: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      pointer-events: none;
     }
 
     .ring svg { width: 100%; height: 100%; }
@@ -338,32 +284,54 @@ html, body {
     #ringCircle {
       fill: none;
       stroke-width: 3;
-      opacity: 0.9;
       stroke-linecap: round;
+      opacity: .9;
       transform-origin: 50% 50%;
       transform: rotate(-90deg);
-      stroke: rgba(135, 206, 250, 0.7);
-      transition: stroke 0.3s ease;
+      stroke: rgba(135,206,250,.7);
     }
 
     @keyframes ringColorShift {
-      0%   { stroke: rgba(135, 206, 250, 0.20); }
-      25%  { stroke: rgba(135, 206, 250, 0.85); }
-      50%  { stroke: rgba(173, 216, 230, 0.75); }
-      75%  { stroke: rgba(144, 238, 144, 0.65); }
-      100% { stroke: rgba(135, 206, 250, 0.20); }
+      0% { stroke: rgba(135,206,250,.20); }
+      25% { stroke: rgba(135,206,250,.85); }
+      50% { stroke: rgba(173,216,230,.75); }
+      75% { stroke: rgba(144,238,144,.65); }
+      100% { stroke: rgba(135,206,250,.20); }
     }
 
     #speakerIcon.muted #ringCircle,
     #speakerIcon.active #ringCircle {
       animation: ringColorShift 12s ease-in-out infinite;
     }
+
+    /* NIEBLA INFERIOR AZUL PROFUNDO */
+    .bottom-fog {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 8vh;
+      pointer-events: none;
+      z-index: 20;
+      background: linear-gradient(
+        to top,
+        rgba(3,18,40,1) 0%,
+        rgba(3,18,40,1) 37%,
+        rgba(3,18,40,0) 100%
+      );
+    }
+
+    /* ESTADO INICIAL PARA EFECTO ESCALONADO (JS SE ENCARGA DEL FADE) */
+    .center-block .name,
+    .center-block .subtitle,
+    .center-block .nav-button {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
   </style>
 </head>
 
 <body>
-  <div class="intro-fade" id="intro-fade"></div>
-
   <div class="sea-container" id="sea-container">
 
     <div class="center-block">
@@ -382,123 +350,141 @@ html, body {
     </div>
 
     <div class="particles" id="particles-layer"></div>
-    <div class="bottom-fade"></div>
     <div class="overlay"></div>
+    <div class="grain"></div>
   </div>
 
-  <!-- Icono de sonido -->
+  <!-- ICONO DE SONIDO -->
   <div id="speakerIcon" class="muted">
     <div class="ring">
       <svg viewBox="0 0 60 60">
-        <circle id="ringCircle" cx="30" cy="30" r="26"></circle>
+        <circle id="ringCircle" cx="30" cy="30" r="24"></circle>
       </svg>
     </div>
     <img src="sonido/icono.png" alt="Audio marino" draggable="false">
   </div>
 
+  <!-- NIEBLA INFERIOR -->
+  <div class="bottom-fog"></div>
+
+  <!-- SCRIPT FONDO MARINO -->
   <script>
-    /* ========== MAR: ALGAS + PARTÍCULAS + FADE + ESCALONADO TEXTO ========== */
+  (function () {
+    "use strict";
 
     const algaeSources = [
       "algas/algas 1.png","algas/algas 2.png","algas/algas 3.png",
       "algas/algas 4.png","algas/algas 5.png"
     ];
 
-    const container          = document.getElementById("sea-container");
+    const container = document.getElementById("sea-container");
     const particlesContainer = document.getElementById("particles-layer");
-    const introFade          = document.getElementById("intro-fade");
 
-    const staggerItems = []; // título + subtítulo + botones
+    let bgImages = [];
+    let fgImages = [];
+    let bgReady = false;
+    let fgReady = false;
+    let revealed = false;
 
-    let bgImages = [], fgImages = [];
-    let bgReady = false, fgReady = false, revealed = false;
+    const random = (a, b) => a + Math.random() * (b - a);
 
-    const random = (a,b) => a + Math.random()*(b-a);
+    const getVH = () =>
+      window.innerHeight || document.documentElement.clientHeight || screen.height;
+    const getVW = () =>
+      window.innerWidth || document.documentElement.clientWidth || screen.width;
 
-    function getVH() {
-      return window.innerHeight || document.documentElement.clientHeight || screen.height;
-    }
-    function getVW() {
-      return window.innerWidth || document.documentElement.clientWidth || screen.width;
-    }
+    const isPortrait = () => getVH() > getVW();
 
-    function startStagger() {
-      if (!staggerItems.length) return;
-      const baseDelay = 140; // ms entre cada elemento
-      staggerItems.forEach((el, index) => {
-        setTimeout(() => {
-          el.style.opacity  = "1";
-          el.style.transform = "translateY(0)";
-        }, baseDelay * index);
+    // NUEVO: escalonado del título/subtítulo/botones con JS (igual en PC y iPad)
+    function startTextStagger() {
+      const nameEl = container.querySelector(".name");
+      const subtitleEl = container.querySelector(".subtitle");
+      const buttons = container.querySelectorAll(".nav-button");
+
+      if (!nameEl || !subtitleEl || !buttons.length) return;
+
+      const elements = [nameEl, subtitleEl, ...buttons];
+
+      elements.forEach(el => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(-10px)";
       });
-    }
 
-    function doReveal() {
-      requestAnimationFrame(() => {
-        container.classList.add("visible");
-        startStagger();  // bajan de arriba hacia abajo, en cascada
+      const baseDelay = 150; // ms
+      const step = 120;      // ms entre cada uno
 
-        if (introFade) {
-          introFade.classList.add("hidden");
-          setTimeout(() => {
-            introFade.remove();
-          }, 1000);
-        }
+      elements.forEach((el, index) => {
+        setTimeout(() => {
+          el.style.transition = "opacity 0.55s ease-out, transform 0.55s ease-out";
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+        }, baseDelay + index * step);
       });
     }
 
     function tryReveal() {
       if (bgReady && fgReady && !revealed) {
         revealed = true;
-        doReveal();
+        container.classList.add("visible");
+        startTextStagger();
       }
+    }
+
+    // Evita que se repitan demasiado los mismos PNG
+    function pickAlgaSrcNoCluster(prev1, prev2) {
+      let candidates = algaeSources.filter(s => s !== prev1 && s !== prev2);
+      if (!candidates.length) candidates = algaeSources.filter(s => s !== prev1);
+      if (!candidates.length) candidates = algaeSources.slice();
+      return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
     function createSea() {
       container.querySelectorAll("img.alga").forEach(e => e.remove());
       bgImages = [];
       fgImages = [];
-      bgReady = fgReady = revealed = false;
+      bgReady = false;
+      fgReady = false;
+      revealed = false;
       container.classList.remove("visible");
-
-      if (introFade) {
-        introFade.classList.remove("hidden");
-      }
-
       loadBG();
       loadFG();
     }
 
-    /* ---------- FONDO: 106% de alto, subido -6%, SIN ALGAS IGUALES CERCA ---------- */
+    /* FONDO (ALGAS DESENFOCADAS, POQUITAS EN VERTICAL) */
     function loadBG() {
-      const count = Math.floor(random(10,18));
-      let done = 0;
+      const portrait = isPortrait();
 
-      // memoria de últimos índices para evitar repeticiones cercanas
-      const recentBG = [];
-      const recentLimitBG = 2; // no repetir ninguna de las 2 últimas
+      // Menos algas en vertical para que no se amontonen
+      const baseCount = portrait
+        ? Math.floor(random(3, 5))    // vertical: 3–4 algas
+        : Math.floor(random(7, 11));  // horizontal: 7–10 algas
+
+      const count = baseCount;
+
+      let done = 0;
+      bgImages = [];
+
+      let prev1 = null;
+      let prev2 = null;
 
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
         img.className = "alga alga-bg";
 
-        let idx = 0;
-        if (algaeSources.length > 1) {
-          let attempts = 0;
-          do {
-            idx = Math.floor(Math.random() * algaeSources.length);
-            attempts++;
-          } while (recentBG.includes(idx) && attempts < 15);
-        }
-        recentBG.push(idx);
-        if (recentBG.length > recentLimitBG) recentBG.shift();
+        const src = pickAlgaSrcNoCluster(prev1, prev2);
+        img.src = src;
+        prev2 = prev1;
+        prev1 = src;
 
-        img.src = algaeSources[idx];
-
-        img.style.opacity = random(.22,.40);
-        img.style.filter  = `blur(${random(1.2,3.2)}px) saturate(.8)`;
+        img.style.opacity = random(.22, .40);
+        img.style.filter = `blur(${random(1.2, 3.2)}px) saturate(.8)`;
         if (Math.random() < .5) img.style.transform = "scaleX(-1)";
-        img.onload = () => { done++; if (done === count) layoutBG(); };
+
+        img.onload = () => {
+          done++;
+          if (done === count) layoutBG();
+        };
+
         bgImages.push(img);
         container.insertBefore(img, container.firstChild);
       }
@@ -510,69 +496,72 @@ html, body {
       const vh = getVH();
       const vw = getVW();
 
-      const totalHeight = vh * 1.06;
-      const topOffset   = -vh * 0.06;
+      const totalHeight = vh;
+      const topOffset = 0;
 
-      let currentX = random(vw * 0.05, vw * 0.10);
+      const marginLeft = vw * 0.03;
+      const marginRight = vw * 0.03;
 
-      bgImages.forEach(img => {
+      const n = bgImages.length;
+      const segments = n + 1;
+      const segmentWidth = vw / segments;
+
+      bgImages.forEach((img, index) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        let width   = totalHeight * ratio;
+        let width = totalHeight * ratio;
         const maxWidth = vw * 0.35;
         if (width > maxWidth) width = maxWidth;
 
-        if (currentX + width > vw - vw * 0.05) {
-          img.remove();
-          return;
-        }
+        let center = (index + 1) * segmentWidth;
+        let left = center - width / 2;
+
+        // clamp para que nunca se corten en X
+        if (left < marginLeft) left = marginLeft;
+        if (left + width > vw - marginRight) left = vw - marginRight - width;
 
         img.style.height = totalHeight + "px";
-        img.style.width  = width + "px";
-        img.style.top    = topOffset + "px";
-        img.style.left   = currentX + "px";
-
-        currentX += width + random(vw * 0.10, vw * 0.20);
+        img.style.width = width + "px";
+        img.style.top = topOffset + "px";
+        img.style.left = left + "px";
       });
 
       bgReady = true;
       tryReveal();
     }
 
-    /* ---------- FRENTE: mismas reglas + SIN ALGAS PRINCIPALES IGUALES CERCA ---------- */
+    /* FRENTE (ALGAS DELANTERAS, TAMBIÉN MENOS EN VERTICAL) */
     function loadFG() {
-      const count = Math.floor(random(7,12));
-      let done = 0;
+      const portrait = isPortrait();
 
-      const recentFG = [];
-      const recentLimitFG = 2; // evita que la misma se repita en las 2 últimas posiciones
+      const baseCount = portrait
+        ? Math.floor(random(3, 6))    // vertical: 3–5 algas delante
+        : Math.floor(random(7, 12));  // horizontal: 7–11 algas
+
+      const count = baseCount;
+
+      let done = 0;
+      fgImages = [];
+
+      let prev1 = null;
+      let prev2 = null;
 
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
         img.className = "alga alga-fg";
 
-        let idx = 0;
-        if (algaeSources.length > 1) {
-          let attempts = 0;
-          do {
-            idx = Math.floor(Math.random() * algaeSources.length);
-            attempts++;
-          } while (recentFG.includes(idx) && attempts < 15);
-        }
-        recentFG.push(idx);
-        if (recentFG.length > recentLimitFG) recentFG.shift();
+        const src = pickAlgaSrcNoCluster(prev1, prev2);
+        img.src = src;
+        prev2 = prev1;
+        prev1 = src;
 
-        img.src = algaeSources[idx];
+        img.style.opacity = random(.50, .78);
+        if (Math.random() < .5) img.style.transform = "scaleX(-1)";
 
-        img.style.opacity = random(.50,.78);
+        img.onload = () => {
+          done++;
+          if (done === count) layoutFG();
+        };
 
-        // flip horizontal mediante variable CSS para que no lo borre la animación
-        if (Math.random() < .5) {
-          img.style.setProperty("--flipX", "-1");
-        } else {
-          img.style.setProperty("--flipX", "1");
-        }
-
-        img.onload = () => { done++; if (done === count) layoutFG(); };
         fgImages.push(img);
         container.insertBefore(img, container.querySelector(".overlay"));
       }
@@ -584,29 +573,29 @@ html, body {
       const vh = getVH();
       const vw = getVW();
 
-      const totalHeight   = vh * 1.06;
-      const topOffset     = -vh * 0.06;
-      const segments      = fgImages.length - 1 || 1;
-      const segmentWidth  = vw / segments;
+      const totalHeight = vh;
+      const topOffset = 0;
+      const segments = fgImages.length - 1 || 1;
+      const segmentWidth = vw / segments;
 
       fgImages.forEach((img, i) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
         const width = totalHeight * ratio * 1.05;
 
         const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
-        const left   = center - width / 2;
+        const left = center - width / 2;
 
         img.style.height = totalHeight + "px";
-        img.style.width  = width + "px";
-        img.style.top    = topOffset + "px";
-        img.style.left   = left + "px";
+        img.style.width = width + "px";
+        img.style.top = topOffset + "px";
+        img.style.left = left + "px";
       });
 
       fgReady = true;
       tryReveal();
     }
 
-    /* ---------- PARTÍCULAS ORGÁNICAS ---------- */
+    /* PARTÍCULAS */
     function createParticles() {
       particlesContainer.innerHTML = "";
 
@@ -625,7 +614,7 @@ html, body {
 
         const w = random(2, 10);
         const h = random(2, 10);
-        p.style.width  = w + "px";
+        p.style.width = w + "px";
         p.style.height = h + "px";
 
         const r1 = random(40, 90);
@@ -641,49 +630,41 @@ html, body {
         }
 
         p.style.left = random(0, 100) + "vw";
-        p.style.top  = random(0, 100) + "vh";
+        p.style.top = random(0, 100) + "vh";
 
         p.style.setProperty("--driftX", random(3, 10) + "vw");
-        p.style.setProperty("--ampY",  random(-8, 8) + "px");
+        p.style.setProperty("--ampY", random(-8, 8) + "px";
 
         p.style.animationDuration = random(14, 30) + "s";
-        p.style.animationDelay    = random(-25, 0) + "s";
+        p.style.animationDelay = random(-25, 0) + "s";
 
         particlesContainer.appendChild(p);
       }
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
-      // preparar elementos escalonados (título, subtítulo, botones)
-      const items = document.querySelectorAll(".center-block .name, .center-block .subtitle, .center-block .nav-button");
-      items.forEach(el => {
-        el.style.opacity = "0";
-        el.style.transform = "translateY(-18px)";
-        el.style.transition = "opacity 0.6s ease-out, transform 0.6s ease-out";
-        staggerItems.push(el);
-      });
+    function relayoutScene() {
+      layoutBG();
+      layoutFG();
+      createParticles();
+    }
 
+    document.addEventListener("DOMContentLoaded", () => {
       createSea();
       createParticles();
     });
 
-    window.addEventListener("resize", () => {
-      layoutBG();
-      layoutFG();
-      createParticles();
-    });
+    window.addEventListener("resize", relayoutScene);
 
     window.addEventListener("orientationchange", () => {
-      setTimeout(() => {
-        layoutBG();
-        layoutFG();
-        createParticles();
-      }, 300);
+      setTimeout(relayoutScene, 300);
     });
+  })();
   </script>
 
+  <!-- SCRIPT DEL SONIDO -->
   <script>
-    /* ===================== AUDIO ENGINE ICONO ===================== */
+  (function () {
+    "use strict";
 
     let audioCtx = null;
     let masterGain = null;
@@ -694,29 +675,36 @@ html, body {
     const MIN_VOL = 0.12;
     const MAX_VOL = 0.7;
 
-    let bassVoices = [];
-    let activePads = [];
     let padTimeoutId = null;
-
     let leadOsc = null;
     let leadGain = null;
     let leadTimeoutId = null;
-
     let noiseSource = null;
     let noiseGain = null;
     let noiseFilter = null;
     let noiseTimeoutId = null;
 
     const bassRoot = 55;
-    const pentatonicSteps = [0,2,4,7,9];
+    const pentatonicSteps = [0, 2, 4, 7, 9];
 
     const speakerIcon = document.getElementById("speakerIcon");
     const ringCircle = document.getElementById("ringCircle");
     let ringLength = 0;
 
     function randomPentatonicFreq() {
-      let semis = 24 + pentatonicSteps[Math.floor(Math.random()*pentatonicSteps.length)];
-      return bassRoot * Math.pow(2, semis/12);
+      const semis = 24 + pentatonicSteps[Math.floor(Math.random() * pentatonicSteps.length)];
+      return bassRoot * Math.pow(2, semis / 12);
+    }
+
+    /* FADE SUAVE GENERAL */
+    function smoothFadeTo(targetValue, durationSeconds) {
+      if (!audioCtx || !masterGain) return;
+      const now = audioCtx.currentTime;
+      const current = masterGain.gain.value;
+
+      masterGain.gain.cancelScheduledValues(now);
+      masterGain.gain.setValueAtTime(current, now);
+      masterGain.gain.linearRampToValueAtTime(targetValue, now + durationSeconds);
     }
 
     function createContext() {
@@ -738,111 +726,114 @@ html, body {
       createLeadVoice();
       createNoiseLayer();
 
-      masterGain.gain.linearRampToValueAtTime(userVolume, audioCtx.currentTime + 3);
+      smoothFadeTo(userVolume, 2.5);
     }
 
     function createBassLayer() {
-      [bassRoot, bassRoot*1.2].forEach((f,i)=>{
-        let osc = audioCtx.createOscillator();
-        let g = audioCtx.createGain();
+      [bassRoot, bassRoot * 1.2].forEach((f, i) => {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
 
-        osc.type="sine";
-        osc.frequency.value=f;
+        osc.type = "sine";
+        osc.frequency.value = f;
 
-        g.gain.value=0;
+        g.gain.value = 0;
         osc.connect(g);
         g.connect(filter);
 
-        g.gain.linearRampToValueAtTime(0.12 + i*0.03, audioCtx.currentTime + 5 + i*1.5);
+        g.gain.linearRampToValueAtTime(
+          0.12 + i * 0.03,
+          audioCtx.currentTime + 5 + i * 1.5
+        );
         osc.start();
-
-        bassVoices.push({osc,g});
       });
     }
 
     function spawnPadNote() {
-      if(!audioCtx) return;
-      const base = [196,220,246.94,261.63,293.66][Math.floor(Math.random()*5)];
-      let osc = audioCtx.createOscillator();
-      let g = audioCtx.createGain();
-      osc.type = Math.random()<0.5 ? "sine":"triangle";
+      if (!audioCtx) return;
+      const bases = [196, 220, 246.94, 261.63, 293.66];
+      const base = bases[Math.floor(Math.random() * bases.length)];
+
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = Math.random() < 0.5 ? "sine" : "triangle";
       osc.frequency.value = base;
 
       g.gain.value = 0;
       osc.connect(g);
       g.connect(filter);
 
-      let now = audioCtx.currentTime;
-      let total = 1.4 + Math.random()*1.4;
-      let fin = 0.3 + Math.random()*0.5;
-      let fout = 0.4 + Math.random()*0.8;
-      let sus = Math.max(0.2,total-fin-fout);
-      let peak = 0.06 + Math.random()*0.05;
+      const now = audioCtx.currentTime;
+      const total = 1.4 + Math.random() * 1.4;
+      const fin = 0.3 + Math.random() * 0.5;
+      const fout = 0.4 + Math.random() * 0.8;
+      const sus = Math.max(0.2, total - fin - fout);
+      const peak = 0.06 + Math.random() * 0.05;
 
-      g.gain.linearRampToValueAtTime(peak, now+fin);
-      g.gain.linearRampToValueAtTime(peak, now+fin+sus);
-      g.gain.linearRampToValueAtTime(0, now+total);
+      g.gain.linearRampToValueAtTime(peak, now + fin);
+      g.gain.linearRampToValueAtTime(peak, now + fin + sus);
+      g.gain.linearRampToValueAtTime(0, now + total);
 
       osc.start();
-      osc.stop(now+total+0.2);
-
-      activePads.push(osc);
+      osc.stop(now + total + 0.2);
     }
 
-    function scheduleNextPad(){
-      if(!running || !audioCtx) return;
+    function scheduleNextPad() {
+      if (!running || !audioCtx) return;
       spawnPadNote();
-      padTimeoutId = setTimeout(scheduleNextPad, 500+Math.random()*2000);
+      padTimeoutId = setTimeout(scheduleNextPad, 500 + Math.random() * 2000);
     }
 
-    function startPadLoop(){
-      setTimeout(()=>{
-        if(running) scheduleNextPad();
-      },800);
+    function startPadLoop() {
+      setTimeout(() => {
+        if (running) scheduleNextPad();
+      }, 800);
     }
 
-    function createLeadVoice(){
+    function createLeadVoice() {
       leadOsc = audioCtx.createOscillator();
       leadGain = audioCtx.createGain();
-      leadOsc.type="triangle";
+      leadOsc.type = "triangle";
       leadOsc.frequency.value = randomPentatonicFreq();
       leadGain.gain.value = 0;
 
       leadOsc.connect(leadGain);
       leadGain.connect(filter);
 
-      leadGain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime+3);
+      leadGain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime + 3);
       leadOsc.start();
       scheduleNextLeadStep();
     }
 
-    function scheduleNextLeadStep(){
-      if(!running || !audioCtx) return;
-      let now = audioCtx.currentTime;
+    function scheduleNextLeadStep() {
+      if (!running || !audioCtx) return;
+      const now = audioCtx.currentTime;
       leadOsc.frequency.setValueAtTime(randomPentatonicFreq(), now);
 
-      let dur = 0.8 + Math.random()*2;
-      let newGain = 0.02 + Math.random()*0.02;
-      leadGain.gain.linearRampToValueAtTime(newGain, now + dur*0.5);
+      const dur = 0.8 + Math.random() * 2;
+      const newGain = 0.02 + Math.random() * 0.02;
+      leadGain.gain.linearRampToValueAtTime(newGain, now + dur * 0.5);
 
-      leadTimeoutId = setTimeout(scheduleNextLeadStep, dur*1000);
+      leadTimeoutId = setTimeout(scheduleNextLeadStep, dur * 1000);
     }
 
-    function createNoiseLayer(){
-      let buf = audioCtx.createBuffer(1, 2*audioCtx.sampleRate, audioCtx.sampleRate);
-      let data = buf.getChannelData(0);
-      for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.5;
+    function createNoiseLayer() {
+      const buf = audioCtx.createBuffer(1, 2 * audioCtx.sampleRate, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.5;
+      }
 
       noiseSource = audioCtx.createBufferSource();
-      noiseSource.buffer=buf;
-      noiseSource.loop=true;
+      noiseSource.buffer = buf;
+      noiseSource.loop = true;
 
       noiseGain = audioCtx.createGain();
-      noiseGain.gain.value=0;
+      noiseGain.gain.value = 0;
 
       noiseFilter = audioCtx.createBiquadFilter();
-      noiseFilter.type="bandpass";
-      noiseFilter.frequency.value=1500;
+      noiseFilter.type = "bandpass";
+      noiseFilter.frequency.value = 1500;
 
       noiseSource.connect(noiseFilter);
       noiseFilter.connect(noiseGain);
@@ -850,119 +841,127 @@ html, body {
 
       noiseSource.start();
 
-      noiseGain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime+3);
+      // ruido tipo televisor antiguo al ~60% del valor anterior
+      noiseGain.gain.linearRampToValueAtTime(0.024, audioCtx.currentTime + 3);
       scheduleNextNoiseMod();
     }
 
-    function scheduleNextNoiseMod(){
-      if(!running||!audioCtx) return;
-      let now = audioCtx.currentTime;
-      let t = 2 + Math.random()*3;
-      let g = 0.02 + Math.random()*0.05;
+    function scheduleNextNoiseMod() {
+      if (!running || !audioCtx) return;
+      const now = audioCtx.currentTime;
+      const t = 2 + Math.random() * 3;
+      const base = 0.02 + Math.random() * 0.05;
+      const g = base * 0.6;
 
-      noiseGain.gain.linearRampToValueAtTime(g, now+t);
-      noiseTimeoutId = setTimeout(scheduleNextNoiseMod, t*1000);
+      noiseGain.gain.linearRampToValueAtTime(g, now + t);
+      noiseTimeoutId = setTimeout(scheduleNextNoiseMod, t * 1000);
     }
 
-    function startSea(){
-      if(running) return;
+    function startSea() {
+      if (running) return;
       running = true;
       speakerIcon.classList.remove("muted");
       speakerIcon.classList.add("active");
 
-      if(!audioCtx || audioCtx.state==="closed"){
+      if (!audioCtx || audioCtx.state === "closed") {
         createContext();
-      } else if(audioCtx.state==="suspended"){
+      } else if (audioCtx.state === "suspended") {
         audioCtx.resume();
+        smoothFadeTo(userVolume, 2.0);
+      } else {
+        smoothFadeTo(userVolume, 2.0);
       }
-
-      masterGain.gain.linearRampToValueAtTime(userVolume, audioCtx.currentTime+2);
     }
 
-    function stopSea(){
-      if(!running || !audioCtx) return;
+    function stopSea() {
+      if (!running || !audioCtx) return;
       running = false;
 
       speakerIcon.classList.add("muted");
       speakerIcon.classList.remove("active");
 
-      masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime+3);
+      smoothFadeTo(0, 2.8);
 
-      if(padTimeoutId){clearTimeout(padTimeoutId); padTimeoutId=null;}
-      if(leadTimeoutId){clearTimeout(leadTimeoutId); leadTimeoutId=null;}
-      if(noiseTimeoutId){clearTimeout(noiseTimeoutId); noiseTimeoutId=null;}
+      if (padTimeoutId) { clearTimeout(padTimeoutId); padTimeoutId = null; }
+      if (leadTimeoutId) { clearTimeout(leadTimeoutId); leadTimeoutId = null; }
+      if (noiseTimeoutId) { clearTimeout(noiseTimeoutId); noiseTimeoutId = null; }
 
-      setTimeout(()=>{
-        if(audioCtx){
+      setTimeout(() => {
+        if (audioCtx) {
           audioCtx.close();
-          audioCtx=null;
+          audioCtx = null;
         }
-      },3500);
+      }, 3200);
     }
 
-    function initRing(){
-      let r = parseFloat(ringCircle.getAttribute("r"));
+    function initRing() {
+      const r = parseFloat(ringCircle.getAttribute("r"));
       ringLength = 2 * Math.PI * r;
       ringCircle.style.strokeDasharray = ringLength;
       updateVolumeVisual();
     }
 
-    function updateVolumeVisual(){
+    function updateVolumeVisual() {
       let ratio = (userVolume - MIN_VOL) / (MAX_VOL - MIN_VOL);
-      ratio = Math.max(0,Math.min(1,ratio));
-      ringCircle.style.strokeDashoffset = ringLength * (1-ratio);
+      ratio = Math.max(0, Math.min(1, ratio));
+      ringCircle.style.strokeDashoffset = ringLength * (1 - ratio);
     }
 
-    function applyVolumeChange(){
-      if(!audioCtx||!masterGain) return;
-      masterGain.gain.linearRampToValueAtTime(userVolume, audioCtx.currentTime+0.15);
+    function applyVolumeChange() {
+      if (!audioCtx || !masterGain) return;
+      smoothFadeTo(userVolume, 0.2);
       updateVolumeVisual();
     }
 
-    let dragging=false;
-    let lastY=0;
-    let moved=false;
-    let activePointerId=null;
+    // CONTROL DEL VOLUMEN CON POINTER (evita arrastrar el icono como imagen)
+    let dragging = false;
+    let lastY = 0;
+    let moved = false;
+    let activePointerId = null;
 
     speakerIcon.addEventListener("dragstart", e => e.preventDefault());
 
-    speakerIcon.addEventListener("pointerdown", e=>{
+    speakerIcon.addEventListener("pointerdown", e => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
       e.preventDefault();
-      dragging=true;
-      moved=false;
-      lastY=e.clientY;
-      activePointerId=e.pointerId;
+      dragging = true;
+      moved = false;
+      lastY = e.clientY;
+      activePointerId = e.pointerId;
       speakerIcon.setPointerCapture(e.pointerId);
     });
 
-    speakerIcon.addEventListener("pointermove", e=>{
-      if(!dragging || e.pointerId !== activePointerId) return;
+    speakerIcon.addEventListener("pointermove", e => {
+      if (!dragging || e.pointerId !== activePointerId) return;
 
       if (e.pointerType === "mouse" && !(e.buttons & 1)) {
-        dragging=false;
+        dragging = false;
         speakerIcon.releasePointerCapture(activePointerId);
-        activePointerId=null;
+        activePointerId = null;
         return;
       }
 
-      let dy=e.clientY-lastY;
-      if(Math.abs(dy)>2) moved=true;
-      lastY=e.clientY;
+      const dy = e.clientY - lastY;
+      if (Math.abs(dy) > 2) moved = true;
+      lastY = e.clientY;
 
-      userVolume = Math.max(MIN_VOL, Math.min(MAX_VOL, userVolume - dy*0.002));
+      userVolume = Math.max(
+        MIN_VOL,
+        Math.min(MAX_VOL, userVolume - dy * 0.002)
+      );
       applyVolumeChange();
     });
 
-    function endPointer(e){
-      if(!dragging || e.pointerId !== activePointerId) return;
+    function endPointer(e) {
+      if (!dragging || !activePointerId || e.pointerId !== activePointerId) return;
       e.preventDefault();
-      dragging=false;
+      dragging = false;
       speakerIcon.releasePointerCapture(e.pointerId);
-      activePointerId=null;
+      activePointerId = null;
 
-      if(!moved){
-        if(running) stopSea();
+      // Si no se movió, es un "tap": alterna play/stop
+      if (!moved) {
+        if (running) stopSea();
         else startSea();
       }
     }
@@ -970,9 +969,10 @@ html, body {
     speakerIcon.addEventListener("pointerup", endPointer);
     speakerIcon.addEventListener("pointercancel", endPointer);
 
-    window.addEventListener("load", ()=>{
+    window.addEventListener("load", () => {
       initRing();
     });
+  })();
   </script>
 </body>
 </html>
