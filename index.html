@@ -68,7 +68,7 @@
       animation: corrientePuppet 12s ease-in-out infinite;
     }
 
-    /* Movimiento grupal de corriente */
+    /* Movimiento grupal de corriente de las algas */
     @keyframes corrientePuppet {
       0%   { transform: translateY(0px) rotate(0deg) skewX(0deg); }
       25%  { transform: translateY(-6px) rotate(0.5deg) skewX(1.5deg); }
@@ -91,21 +91,25 @@
     .particle {
       position: absolute;
       border-radius: 999px;
-      background: rgba(230, 245, 255, 0.7);
       mix-blend-mode: screen;
       opacity: 0.25;
-      animation-name: floatParticle;
-      animation-timing-function: linear;
+      animation-name: particleCurrent;
+      animation-timing-function: ease-in-out;
       animation-iteration-count: infinite;
-      will-change: transform;
+      animation-direction: alternate; /* va y viene con la corriente */
+      will-change: transform, opacity;
     }
 
-    @keyframes floatParticle {
+    /* Corriente suave: se desplazan lateralmente y un poco en Y */
+    @keyframes particleCurrent {
       0% {
         transform: translate3d(0, 0, 0);
       }
+      50% {
+        transform: translate3d(var(--driftX), var(--ampY), 0);
+      }
       100% {
-        transform: translate3d(var(--dx, 0px), -120vh, 0);
+        transform: translate3d(0, 0, 0);
       }
     }
 
@@ -142,8 +146,6 @@
     <div class="overlay"></div>
     <div class="grain"></div>
   </div>
-
-  <!-- (OJO: ya no hay filtro SVG, se quitó el displacement) -->
 
   <!-- ------------------------------------
        JAVASCRIPT
@@ -212,7 +214,7 @@
         img.style.opacity = random(0.22, 0.40).toFixed(2);
 
         const blur = random(1.2, 3.2);
-        img.style.filter = `blur(${blur.toFixed(1)}px) saturate(0.8)`; // SIN url(#agua-suave)
+        img.style.filter = `blur(${blur.toFixed(1)}px) saturate(0.8)`; // SIN displacement
 
         if (Math.random() < 0.5) img.style.transform = "scaleX(-1)";
 
@@ -322,28 +324,54 @@
       particlesContainer.innerHTML = "";
 
       const count = 60;
+      const palette = [
+        "rgba(230,245,255,0.85)",
+        "rgba(200,225,240,0.80)",
+        "rgba(180,210,220,0.75)",
+        "rgba(160,205,210,0.70)"
+      ];
+
       for (let i = 0; i < count; i++) {
         const p = document.createElement("div");
         p.className = "particle";
 
-        const size = random(2, 5);
+        // Tamaño variado
+        const size = random(2, 7);
         p.style.width = size + "px";
         p.style.height = size + "px";
 
+        // Color variado (no todas blancas)
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        p.style.background = color;
+
+        // Algunas más grandes con blur suave
+        if (size > 4) {
+          const blur = random(0.5, 1.8).toFixed(2);
+          p.style.filter = `blur(${blur}px)`;
+        }
+
+        // Posición inicial aleatoria
         const left = random(0, 100);
-        const startY = random(0, 100);
+        const top = random(0, 100);
         p.style.left = left + "vw";
-        p.style.top = startY + "vh";
+        p.style.top = top + "vh";
 
-        const dx = random(-16, 16).toFixed(1) + "px";
-        p.style.setProperty("--dx", dx);
+        // Corriente: de izquierda a derecha con ligera variación vertical
+        const driftX = random(4, 14).toFixed(1) + "vw";   // cuánto se desplaza lateralmente
+        const ampY = random(-10, 10).toFixed(1) + "px";   // pequeño bamboleo vertical
 
-        const dur = random(18, 36).toFixed(1) + "s";
-        const delay = random(-36, 0).toFixed(1) + "s";
+        p.style.setProperty("--driftX", driftX);
+        p.style.setProperty("--ampY", ampY);
+
+        // Duración y delay para que no vayan todas sincronizadas
+        const dur = random(16, 32).toFixed(1) + "s";
+        const delay = random(-32, 0).toFixed(1) + "s";
 
         p.style.animationDuration = dur;
         p.style.animationDelay = delay;
-        p.style.opacity = random(0.12, 0.40).toFixed(2);
+
+        // Opacidad sutil y variada
+        p.style.opacity = random(0.10, 0.40).toFixed(2);
 
         particlesContainer.appendChild(p);
       }
