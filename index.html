@@ -12,15 +12,24 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at 10% 0%, #3f7f82 0%, #0b3a3e 35%, #020e10 80%),
-        linear-gradient(to bottom, #083234, #020b0d);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #e5f3ff;
-    }
+html, body {
+  height: 100%;
+  overflow: hidden;
+  /* Fondo de mar:
+     - Arriba: naranja suave + turquesa luminoso
+     - Medio: azul verdoso
+     - Abajo: azul muy oscuro */
+  background:
+    linear-gradient(
+      to bottom,
+      #ffb678 0%,    /* toque naranja suave, luz arriba */
+      #4fd2c3 1%,   /* turquesa luminoso cerca de la superficie */
+      #1b6f81 40%,   /* azul verdoso intermedio */
+      #041625 60%   /* fondo de mar muy oscuro abajo */
+    );
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #e5f3ff;
+}
 
     /* Capa de fundido de entrada */
     .intro-fade {
@@ -151,8 +160,7 @@
                   0 0 0 1px rgba(15,23,42,.9);
     }
 
-    /* ================== NUEVA ANIMACIÓN ESCALONADA (JS + TRANSITION) ================== */
-
+    /* NUEVA ANIMACIÓN ESCALONADA (JS + TRANSITION) */
     .center-block .name,
     .center-block .subtitle,
     .center-block .nav-button {
@@ -208,16 +216,6 @@
         radial-gradient(circle at 50% 15%, rgba(255,255,220,.08), transparent),
         linear-gradient(to bottom, rgba(10,35,45,.50), rgba(0,0,0,.75));
       mix-blend-mode: soft-light;
-    }
-
-    .grain {
-      position: absolute;
-      inset: 0;
-      z-index: 5;
-      opacity: .16;
-      mix-blend-mode: soft-light;
-      pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
     }
 
     @media (max-width: 768px) {
@@ -383,7 +381,6 @@
     <div class="particles" id="particles-layer"></div>
     <div class="bottom-fade"></div>
     <div class="overlay"></div>
-    <div class="grain"></div>
   </div>
 
   <!-- Icono de sonido -->
@@ -397,7 +394,7 @@
   </div>
 
   <script>
-    /* ========== CÓDIGO DEL MAR (ALGAS + PARTÍCULAS + FADE) ========== */
+    /* ========== MAR: ALGAS + PARTÍCULAS + FADE + ESCALONADO TEXTO ========== */
 
     const algaeSources = [
       "algas/algas 1.png","algas/algas 2.png","algas/algas 3.png",
@@ -436,7 +433,7 @@
     function doReveal() {
       requestAnimationFrame(() => {
         container.classList.add("visible");
-        startStagger();  // ahora sí bajan de arriba hacia abajo, en cascada
+        startStagger();  // bajan de arriba hacia abajo, en cascada
 
         if (introFade) {
           introFade.classList.add("hidden");
@@ -469,15 +466,27 @@
       loadFG();
     }
 
-    /* ---------- FONDO: 106% de alto, subido -6% ---------- */
+    /* ---------- FONDO: 106% de alto, subido -6%, SIN ALGAS IGUALES JUNTAS ---------- */
     function loadBG() {
       const count = Math.floor(random(10,18));
       let done = 0;
+      let lastBGIndex = -1;
 
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
         img.className = "alga alga-bg";
-        img.src = algaeSources[Math.floor(Math.random()*algaeSources.length)];
+
+        let idx;
+        if (algaeSources.length > 1) {
+          do {
+            idx = Math.floor(Math.random() * algaeSources.length);
+          } while (idx === lastBGIndex);
+        } else {
+          idx = 0;
+        }
+        lastBGIndex = idx;
+        img.src = algaeSources[idx];
+
         img.style.opacity = random(.22,.40);
         img.style.filter  = `blur(${random(1.2,3.2)}px) saturate(.8)`;
         if (Math.random() < .5) img.style.transform = "scaleX(-1)";
@@ -521,15 +530,27 @@
       tryReveal();
     }
 
-    /* ---------- FRENTE: mismo ajuste ---------- */
+    /* ---------- FRENTE: mismas reglas + SIN ALGAS PRINCIPALES IGUALES JUNTAS ---------- */
     function loadFG() {
       const count = Math.floor(random(7,12));
       let done = 0;
+      let lastFGIndex = -1;
 
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
         img.className = "alga alga-fg";
-        img.src = algaeSources[Math.floor(Math.random()*algaeSources.length)];
+
+        let idx;
+        if (algaeSources.length > 1) {
+          do {
+            idx = Math.floor(Math.random() * algaeSources.length);
+          } while (idx === lastFGIndex);
+        } else {
+          idx = 0;
+        }
+        lastFGIndex = idx;
+        img.src = algaeSources[idx];
+
         img.style.opacity = random(.50,.78);
         if (Math.random() < .5) img.style.transform = "scaleX(-1)";
         img.onload = () => { done++; if (done === count) layoutFG(); };
@@ -868,9 +889,71 @@
     }
 
     function updateVolumeVisual(){
-      let ratio = (userVolume - MIN_VOL) / (MAX_VOL - MAX_VOL + (MAX_VOL - MIN_VOL));
-      // Ups, mejor corregimos esa fórmula:
+      let ratio = (userVolume - MIN_VOL) / (MAX_VOL - MIN_VOL);
+      ratio = Math.max(0,Math.min(1,ratio));
+      ringCircle.style.strokeDashoffset = ringLength * (1-ratio);
     }
+
+    function applyVolumeChange(){
+      if(!audioCtx||!masterGain) return;
+      masterGain.gain.linearRampToValueAtTime(userVolume, audioCtx.currentTime+0.15);
+      updateVolumeVisual();
+    }
+
+    let dragging=false;
+    let lastY=0;
+    let moved=false;
+    let activePointerId=null;
+
+    speakerIcon.addEventListener("dragstart", e => e.preventDefault());
+
+    speakerIcon.addEventListener("pointerdown", e=>{
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      e.preventDefault();
+      dragging=true;
+      moved=false;
+      lastY=e.clientY;
+      activePointerId=e.pointerId;
+      speakerIcon.setPointerCapture(e.pointerId);
+    });
+
+    speakerIcon.addEventListener("pointermove", e=>{
+      if(!dragging || e.pointerId !== activePointerId) return;
+
+      if (e.pointerType === "mouse" && !(e.buttons & 1)) {
+        dragging=false;
+        speakerIcon.releasePointerCapture(activePointerId);
+        activePointerId=null;
+        return;
+      }
+
+      let dy=e.clientY-lastY;
+      if(Math.abs(dy)>2) moved=true;
+      lastY=e.clientY;
+
+      userVolume = Math.max(MIN_VOL, Math.min(MAX_VOL, userVolume - dy*0.002));
+      applyVolumeChange();
+    });
+
+    function endPointer(e){
+      if(!dragging || e.pointerId !== activePointerId) return;
+      e.preventDefault();
+      dragging=false;
+      speakerIcon.releasePointerCapture(e.pointerId);
+      activePointerId=null;
+
+      if(!moved){
+        if(running) stopSea();
+        else startSea();
+      }
+    }
+
+    speakerIcon.addEventListener("pointerup", endPointer);
+    speakerIcon.addEventListener("pointercancel", endPointer);
+
+    window.addEventListener("load", ()=>{
+      initRing();
+    });
   </script>
 </body>
 </html>
