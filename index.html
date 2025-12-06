@@ -63,14 +63,7 @@
       position: absolute;
       left: 8vw;
       top: 12vh;
-      transform: translateY(30px);
-      opacity: 0;
       z-index: 2;
-      transition: opacity .8s ease-out .1s, transform .8s ease-out .1s;
-    }
-    .sea-container.visible .center-block {
-      opacity: 1;
-      transform: translateY(0);
     }
 
     .name {
@@ -89,7 +82,7 @@
       font-size: .85rem;
       letter-spacing: .24em;
       color: #a5f3fc;
-      margin-bottom: .8rem;
+      margin-bottom: 1.3rem; /* MÁS SEPARACIÓN DEL BLOQUE DE BOTONES */
       text-transform: uppercase;
     }
 
@@ -193,7 +186,7 @@
       .subtitle {
         font-size: 0.8rem;
         letter-spacing: 0.20em;
-        margin-bottom: 0.7rem;
+        margin-bottom: 1.1rem;
       }
       .nav-button {
         width: 177px;
@@ -224,7 +217,7 @@
       box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
       opacity: 0.85;
       transition: opacity 0.2s ease;
-      z-index: 10;
+      z-index: 30;
       touch-action: none;
       user-select: none;
       -webkit-user-drag: none;
@@ -335,15 +328,68 @@
       left: 0;
       right: 0;
       bottom: 0;
-      height: 8vh;              /* 8% inferior de la pantalla */
+      height: 8vh;
       pointer-events: none;
-      z-index: 20;             /* por encima de todo, incluso partículas y grain */
+      z-index: 20;
       background: linear-gradient(
         to top,
-        rgba(0, 0, 0, 1) 0%,    /* 0%: negro opaco (parte más baja) */
-        rgba(0, 0, 0, 1) 37.5%, /* ~5% (de ese 8%): sigue negro */
-        rgba(0, 0, 0, 0) 100%   /* hasta 8%: se vuelve transparente */
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 1) 37.5%,
+        rgba(0, 0, 0, 0) 100%
       );
+    }
+
+    /* =====================================================
+       ANIMACIÓN ESCALONADA TÍTULO / SUBTÍTULO / BOTONES
+       ===================================================== */
+    @keyframes fadeDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Estado inicial: invisibles y un poco más arriba */
+    .center-block .name,
+    .center-block .subtitle,
+    .center-block .nav-button {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    /* Cuando el mar ya está visible, se disparan animaciones escalonadas */
+    .sea-container.visible .center-block .name {
+      animation: fadeDown 0.65s ease-out forwards;
+      animation-delay: 0.15s;
+    }
+
+    .sea-container.visible .center-block .subtitle {
+      animation: fadeDown 0.65s ease-out forwards;
+      animation-delay: 0.30s;
+    }
+
+    .sea-container.visible .center-block .nav-button:nth-child(1) {
+      animation: fadeDown 0.55s ease-out forwards;
+      animation-delay: 0.48s;
+    }
+
+    .sea-container.visible .center-block .nav-button:nth-child(2) {
+      animation: fadeDown 0.55s ease-out forwards;
+      animation-delay: 0.60s;
+    }
+
+    .sea-container.visible .center-block .nav-button:nth-child(3) {
+      animation: fadeDown 0.55s ease-out forwards;
+      animation-delay: 0.72s;
+    }
+
+    .sea-container.visible .center-block .nav-button:nth-child(4) {
+      animation: fadeDown 0.55s ease-out forwards;
+      animation-delay: 0.84s;
     }
   </style>
 </head>
