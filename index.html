@@ -41,7 +41,7 @@
       pointer-events: none;
       object-fit: cover;
       transform-origin: 50% 100%;
-      transform: translateZ(0); /* pequeña ayuda para Safari/iPad */
+      transform: translateZ(0);
     }
     .alga-bg { z-index: 0; }
     .alga-fg {
@@ -99,7 +99,6 @@
       gap: .35rem;
     }
 
-    /* BOTONES 177px CON MULTIPLY */
     .nav-button {
       width: 177px;
       padding: .20rem .75rem;
@@ -180,7 +179,6 @@
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
     }
 
-    /* AJUSTES PARA IPAD / VERTICAL */
     @media (max-width: 768px) {
       .center-block {
         left: 6vw;
@@ -189,7 +187,7 @@
       .name {
         font-size: clamp(2rem, 6vw, 2.6rem);
         letter-spacing: 0.26em;
-        flex-direction: column;   /* Andrea / Lértora en dos líneas */
+        flex-direction: column;
         gap: 0.05em;
       }
       .subtitle {
@@ -208,7 +206,6 @@
 <body>
   <div class="sea-container" id="sea-container">
 
-    <!-- BLOQUE CON TÍTULO y BOTONES -->
     <div class="center-block">
       <div class="name">
         <span class="first">Andrea</span>
@@ -242,6 +239,11 @@
 
     const random=(a,b)=>a+Math.random()*(b-a);
 
+    function getVH() {
+      // un poco más robusto para iPad/Safari
+      return window.innerHeight || document.documentElement.clientHeight || screen.height;
+    }
+
     function tryReveal(){
       if(bgReady && fgReady && !revealed){
         revealed=true;
@@ -257,7 +259,7 @@
       loadBG(); loadFG();
     }
 
-    /* ---------- FONDO: ALGAS ANCLADAS POR ABAJO, MÁS ALTAS PERO NO ENORMES ---------- */
+    /* ---------- FONDO: usando TOP, altura 110% y leve offset arriba ---------- */
     function loadBG(){
       const count=Math.floor(random(10,18));
       let done=0;
@@ -276,32 +278,40 @@
     }
 
     function layoutBG(){
-      const vh=innerHeight, vw=innerWidth;
-      const h = vh * 1.25;          // 125% de la pantalla
-      const bottomOffset = -vh*0.15; // base 15% por debajo del borde inferior
+      if (!bgImages.length) return;
 
-      let x = random(vw*.05, vw*.1);
+      const vh = getVH();
+      const vw = window.innerWidth || document.documentElement.clientWidth || screen.width;
+
+      const totalHeight = vh * 1.10;  // 110% de la pantalla
+      const topOffset   = -vh * 0.05; // subimos 5%: pasa por encima de Y=0 y baja 5%
+
+      let currentX = random(vw * 0.05, vw * 0.10);
 
       bgImages.forEach(img=>{
-        const r = img.naturalWidth/img.naturalHeight || .4;
-        let w  = vh * r * .95;
-        if (w > vw*.35) w = vw*.35;
-        if (x + w > vw - vw*.05) { img.remove(); return; }
+        const ratio = img.naturalWidth / img.naturalHeight || 0.4;
+        let width   = vh * ratio * 0.95;
+        const maxWidth = vw * 0.35;
+        if (width > maxWidth) width = maxWidth;
 
-        img.style.height = h + "px";
-        img.style.width  = w + "px";
-        img.style.left   = x + "px";
-        img.style.top    = "auto";
-        img.style.bottom = bottomOffset + "px";
+        if (currentX + width > vw - vw * 0.05) {
+          img.remove();
+          return;
+        }
 
-        x += w + random(vw*.1, vw*.2);
+        img.style.height = totalHeight + "px";
+        img.style.width  = width + "px";
+        img.style.top    = topOffset + "px";
+        img.style.left   = currentX + "px";
+
+        currentX += width + random(vw * 0.10, vw * 0.20);
       });
 
       bgReady = true;
       tryReveal();
     }
 
-    /* ---------- FRENTE: ALGAS ANCLADAS POR ABAJO IGUAL ---------- */
+    /* ---------- FRENTE: igual lógica que el fondo ---------- */
     function loadFG(){
       const count=Math.floor(random(7,12));
       let done=0;
@@ -319,22 +329,28 @@
     }
 
     function layoutFG(){
-      const vh=innerHeight, vw=innerWidth;
-      const h = vh * 1.25;
-      const bottomOffset = -vh*0.15;
-      const seg = fgImages.length - 1 || 1;
-      const sw  = vw / seg;
+      if (!fgImages.length) return;
+
+      const vh = getVH();
+      const vw = window.innerWidth || document.documentElement.clientWidth || screen.width;
+
+      const totalHeight = vh * 1.10;
+      const topOffset   = -vh * 0.05;
+
+      const segments = fgImages.length - 1 || 1;
+      const segmentWidth = vw / segments;
 
       fgImages.forEach((img,i)=>{
-        const r = img.naturalWidth/img.naturalHeight || .4;
-        const w = vh * r * 1.08;
-        const cx = i*sw + random(-sw*.15, sw*.15);
+        const ratio = img.naturalWidth / img.naturalHeight || 0.4;
+        const width = vh * ratio * 1.08;
 
-        img.style.height = h + "px";
-        img.style.width  = w + "px";
-        img.style.left   = (cx - w/2) + "px";
-        img.style.top    = "auto";
-        img.style.bottom = bottomOffset + "px";
+        const center = i * segmentWidth + random(-segmentWidth * 0.15, segmentWidth * 0.15);
+        const left   = center - width / 2;
+
+        img.style.height = totalHeight + "px";
+        img.style.width  = width + "px";
+        img.style.top    = topOffset + "px";
+        img.style.left   = left + "px";
       });
 
       fgReady = true;
@@ -359,6 +375,9 @@
         p.style.background=palette[Math.floor(Math.random()*palette.length)];
         if(s>4) p.style.filter=`blur(${random(.5,1.8)}px)`;
 
+        const vh = getVH();
+        const vw = window.innerWidth || document.documentElement.clientWidth || screen.width;
+
         p.style.left=random(0,100)+"vw";
         p.style.top=random(0,100)+"vh";
         p.style.setProperty("--driftX", random(4,14)+"vw");
@@ -380,6 +399,14 @@
       layoutBG();
       layoutFG();
       createParticles();
+    });
+
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => {
+        layoutBG();
+        layoutFG();
+        createParticles();
+      }, 300);
     });
   </script>
 </body>
