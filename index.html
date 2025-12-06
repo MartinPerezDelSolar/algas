@@ -22,6 +22,20 @@
       color: #e5f3ff;
     }
 
+    /* Capa de fundido de entrada */
+    .intro-fade {
+      position: fixed;
+      inset: 0;
+      background: #02070b;
+      z-index: 9999;
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 0.9s ease-out;
+    }
+    .intro-fade.hidden {
+      opacity: 0;
+    }
+
     .sea-container {
       position: relative;
       width: 100vw;
@@ -204,6 +218,9 @@
 </head>
 
 <body>
+  <!-- Capa para fundido suave en cualquier dispositivo -->
+  <div class="intro-fade" id="intro-fade"></div>
+
   <div class="sea-container" id="sea-container">
 
     <div class="center-block">
@@ -232,8 +249,10 @@
       "algas/algas 4.png","algas/algas 5.png"
     ];
 
-    const container = document.getElementById("sea-container");
+    const container          = document.getElementById("sea-container");
     const particlesContainer = document.getElementById("particles-layer");
+    const introFade          = document.getElementById("intro-fade");
+
     let bgImages = [], fgImages = [];
     let bgReady = false, fgReady = false, revealed = false;
 
@@ -246,10 +265,23 @@
       return window.innerWidth || document.documentElement.clientWidth || screen.width;
     }
 
+    function doReveal() {
+      // aseguramos que la transición se dispare en un frame separado
+      requestAnimationFrame(() => {
+        container.classList.add("visible");
+        if (introFade) {
+          introFade.classList.add("hidden");
+          setTimeout(() => {
+            introFade.remove();
+          }, 1000);
+        }
+      });
+    }
+
     function tryReveal() {
       if (bgReady && fgReady && !revealed) {
         revealed = true;
-        container.classList.add("visible");
+        doReveal();
       }
     }
 
@@ -259,6 +291,11 @@
       fgImages = [];
       bgReady = fgReady = revealed = false;
       container.classList.remove("visible");
+
+      if (introFade) {
+        introFade.classList.remove("hidden");
+      }
+
       loadBG();
       loadFG();
     }
@@ -377,32 +414,26 @@
         const p = document.createElement("div");
         p.className = "particle";
 
-        // Formas orgánicas: ancho y alto distintos
         const w = random(2, 10);
         const h = random(2, 10);
         p.style.width  = w + "px";
         p.style.height = h + "px";
 
-        // Bordes irregulares
         const r1 = random(40, 90);
         const r2 = random(40, 90);
         const r3 = random(40, 90);
         const r4 = random(40, 90);
         p.style.borderRadius = `${r1}% ${r2}% ${r3}% ${r4}%`;
 
-        // Color
         p.style.background = palette[Math.floor(Math.random() * palette.length)];
 
-        // 10% sin blur, 90% con blur hasta aprox 3px
         if (Math.random() > 0.10) {
           p.style.filter = `blur(${random(0.5, 3)}px)`;
         }
 
-        // Posición
         p.style.left = random(0, 100) + "vw";
         p.style.top  = random(0, 100) + "vh";
 
-        // Movimiento
         p.style.setProperty("--driftX", random(3, 10) + "vw");
         p.style.setProperty("--ampY",  random(-8, 8) + "px");
 
