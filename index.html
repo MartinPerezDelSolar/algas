@@ -170,27 +170,32 @@
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
     }
 
-    @media (max-width: 768px) {
-      .center-block {
-        left: 6vw;
-        top: 10vh;
-      }
-      .name {
-        font-size: clamp(2rem, 6vw, 2.6rem);
-        letter-spacing: 0.26em;
-        flex-direction: column;
-        gap: 0.05em;
-      }
-      .subtitle {
-        font-size: 0.8rem;
-        letter-spacing: 0.20em;
-        margin-bottom: 1.1rem;
-      }
-      .nav-button {
-        width: 177px;
-        padding: 0.22rem 0.75rem;
-      }
-    }
+ @media (max-width: 768px) {
+  .center-block {
+    left: 6vw;
+    top: 10vh;
+  }
+
+  .name {
+    font-size: clamp(2rem, 6vw, 2.6rem);
+    letter-spacing: 0.26em;
+    flex-direction: column;
+    gap: 0.05em;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+    letter-spacing: 0.20em;
+    margin-bottom: 1.1rem;
+  }
+
+  /* BOTONES 30% MÁS GRANDES EN CELULAR / IPAD */
+  .nav-button {
+    width: calc(177px * 1.3);        /* ✔️ 30% más anchos */
+    padding: calc(.20rem * 1.3) calc(.75rem * 1.3); /* ✔️ 30% más altos */
+    font-size: calc(.7rem * 1.3);    /* ✔️ texto 30% más grande */
+  }
+}
 
     /* ICONO DE SONIDO — 7% MÁS PEQUEÑO */
     #speakerIcon {
