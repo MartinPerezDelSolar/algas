@@ -456,9 +456,9 @@
       loadFG();
     }
 
-    /* FONDO (ALGAS DESENFOCADAS, SIN CORTARSE EN X) */
+    /* FONDO (ALGAS DESENFOCADAS, MENOS CANTIDAD Y SIN CORTARSE EN X) */
     function loadBG() {
-      const baseCount = Math.floor(random(10,18));
+      const baseCount = Math.floor(random(5,9));  // antes 10–18 → ahora muchas menos
       const factor = isPortrait() ? 0.5 : 1;
       const count = Math.max(3, Math.round(baseCount * factor));
 
@@ -620,7 +620,7 @@
         p.style.top  = random(0, 100) + "vh";
 
         p.style.setProperty("--driftX",  random(3, 10) + "vw");
-        p.style.setProperty("--ampY",   random(-8, 8) + "px");  /* ← AQUÍ ESTABA EL PARÉNTESIS FALTANTE */
+        p.style.setProperty("--ampY",   random(-8, 8) + "px");
 
         p.style.animationDuration = random(14, 30) + "s";
         p.style.animationDelay    = random(-25, 0) + "s";
