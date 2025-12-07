@@ -395,7 +395,7 @@
 
     const isPortrait = () => getVH() > getVW();
 
-    // NUEVO: escalonado del título/subtítulo/botones con JS (igual en PC y iPad)
+    // Escalonado del título/subtítulo/botones con JS (igual en PC y iPad)
     function startTextStagger() {
       const nameEl = container.querySelector(".name");
       const subtitleEl = container.querySelector(".subtitle");
@@ -633,7 +633,7 @@
         p.style.top = random(0, 100) + "vh";
 
         p.style.setProperty("--driftX", random(3, 10) + "vw");
-        p.style.setProperty("--ampY", random(-8, 8) + "px";
+        p.style.setProperty("--ampY", random(-8, 8) + "px");
 
         p.style.animationDuration = random(14, 30) + "s";
         p.style.animationDelay = random(-25, 0) + "s";
