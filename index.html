@@ -42,24 +42,7 @@
       object-fit: cover;
       transform-origin: 50% 100%;
       transform: translateZ(0);
-
-      /* Degradado de opacidad hacia abajo (último ~10%) */
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        rgba(0,0,0,1) 0%,
-        rgba(0,0,0,1) 90%,   /* aquí empieza a desvanecer */
-        rgba(0,0,0,0) 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        rgba(0,0,0,1) 0%,
-        rgba(0,0,0,1) 90%,
-        rgba(0,0,0,0) 100%
-      );
-      -webkit-mask-size: 100% 100%;
-      mask-size: 100% 100%;
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
+      /* la máscara ahora se pone por JS, distinta en cada alga */
     }
 
     .alga-bg { z-index: 0; }
@@ -394,6 +377,23 @@
 
     const isPortrait = () => getVH() > getVW();
 
+    function applyRandomMask(img) {
+      // corte entre ~82% y 94%, diferente por alga
+      const cut = random(82, 94);
+      const gradient =
+        `linear-gradient(to bottom,
+          rgba(0,0,0,1) 0%,
+          rgba(0,0,0,1) ${cut}%,
+          rgba(0,0,0,0) 100%)`;
+
+      img.style.webkitMaskImage = gradient;
+      img.style.maskImage = gradient;
+      img.style.webkitMaskSize = "100% 100%";
+      img.style.maskSize = "100% 100%";
+      img.style.webkitMaskRepeat = "no-repeat";
+      img.style.maskRepeat = "no-repeat";
+    }
+
     // Escalonado del título/subtítulo/botones con JS (igual en PC y iPad)
     function startTextStagger() {
       const nameEl = container.querySelector(".name");
@@ -475,6 +475,8 @@
         prev2 = prev1;
         prev1 = src;
 
+        applyRandomMask(img);
+
         img.style.opacity = random(.22, .40);
         img.style.filter = `blur(${random(1.2, 3.2)}px) saturate(.8)`;
         if (Math.random() < .5) img.style.transform = "scaleX(-1)";
@@ -552,6 +554,8 @@
         img.src = src;
         prev2 = prev1;
         prev1 = src;
+
+        applyRandomMask(img);
 
         img.style.opacity = random(.50, .78);
         if (Math.random() < .5) img.style.transform = "scaleX(-1)";
@@ -840,7 +844,7 @@
 
       noiseSource.start();
 
-      // ruido tipo televisor antiguo al ~60% del valor anterior
+      // ruido tipo televisor antiguo pero suave
       noiseGain.gain.linearRampToValueAtTime(0.024, audioCtx.currentTime + 3);
       scheduleNextNoiseMod();
     }
