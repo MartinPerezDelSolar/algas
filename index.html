@@ -42,7 +42,26 @@
       object-fit: cover;
       transform-origin: 50% 100%;
       transform: translateZ(0);
+
+      /* Degradado de opacidad hacia abajo (último ~10%) */
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,1) 90%,   /* aquí empieza a desvanecer */
+        rgba(0,0,0,0) 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,1) 90%,
+        rgba(0,0,0,0) 100%
+      );
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
     }
+
     .alga-bg { z-index: 0; }
     .alga-fg {
       z-index: 1;
@@ -304,23 +323,6 @@
       animation: ringColorShift 12s ease-in-out infinite;
     }
 
-    /* NIEBLA INFERIOR AZUL PROFUNDO */
-    .bottom-fog {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 8vh;
-      pointer-events: none;
-      z-index: 20;
-      background: linear-gradient(
-        to top,
-        rgba(3,18,40,1) 0%,
-        rgba(3,18,40,1) 37%,
-        rgba(3,18,40,0) 100%
-      );
-    }
-
     /* ESTADO INICIAL PARA EFECTO ESCALONADO (JS SE ENCARGA DEL FADE) */
     .center-block .name,
     .center-block .subtitle,
@@ -363,9 +365,6 @@
     </div>
     <img src="sonido/icono.png" alt="Audio marino" draggable="false">
   </div>
-
-  <!-- NIEBLA INFERIOR -->
-  <div class="bottom-fog"></div>
 
   <!-- SCRIPT FONDO MARINO -->
   <script>
