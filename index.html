@@ -72,7 +72,15 @@ function setupFish(){
     wrapper.appendChild(canvas);
   }
 
-  const scale = 0.25;
+  // 🔹 tamaño base
+  let scale = 0.25;
+
+  // 🔹 en iPhone / iPad → el doble
+  const ua = navigator.userAgent || navigator.vendor || "";
+  const isiOS = /iPhone|iPad|iPod/i.test(ua);
+  if (isiOS) {
+    scale = 0.5;
+  }
 
   fishWidth  = window.innerWidth * scale;
   fishHeight = fishWidth * (pez.height / pez.width);
