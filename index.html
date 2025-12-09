@@ -45,11 +45,19 @@
       /* la máscara ahora se pone por JS, distinta en cada alga */
     }
 
-    .alga-bg { z-index: 0; }
+    /* Fondo de algas */
+    .alga-bg { z-index: 5; }
+
+    /* Algas enfocadas normales (delante del fondo, detrás del pez) */
     .alga-fg {
-      z-index: 1;
+      z-index: 20;
       filter: saturate(.95);
       animation: corrientePuppet 12s ease-in-out infinite;
+    }
+
+    /* Las dos algas elegidas a los extremos → delante del pez */
+    .alga-fg-front {
+      z-index: 32;
     }
 
     @keyframes corrientePuppet {
@@ -60,12 +68,13 @@
       100% { transform: translateY(0) rotate(0deg) skewX(0deg); }
     }
 
-    /* BLOQUE CENTRAL — TÍTULO Y BOTONES */
+    /* BLOQUE CENTRAL — TÍTULO Y BOTONES
+       SIEMPRE POR ENCIMA DE TODAS LAS CAPAS VISUALES */
     .center-block {
       position: absolute;
       left: 8vw;
       top: 12vh;
-      z-index: 2;
+      z-index: 100;
     }
 
     .name {
@@ -130,19 +139,24 @@
                   0 0 0 1px rgba(15,23,42,.9);
     }
 
-    /* WRAPPER DEL PEZ (CAPA INTERMEDIA) */
+    /* WRAPPER DEL PEZ (CAPA INTERMEDIA)
+       - Empieza invisible y "debajo" con translateY(120%)
+       - Debajo de las algas frontales, encima de algas normales */
     #fish-wrapper{
       position:absolute;
-      z-index:3;             /* por encima de las algas, por debajo del overlay */
+      z-index:30;
       transform-origin:center center;
       pointer-events:none;
+      opacity:0;
+      transform:translateY(120%);
+      transition: opacity 0.7s ease-out, transform 0.9s ease-out;
     }
 
-    /* PARTÍCULAS */
+    /* PARTÍCULAS (encima del pez y de las algas, pero detrás de títulos y logo) */
     .particles {
       position: absolute;
       inset: 0;
-      z-index: 3;
+      z-index: 35;
       pointer-events: none;
     }
 
@@ -162,7 +176,7 @@
     .overlay {
       position: absolute;
       inset: 0;
-      z-index: 4;
+      z-index: 40;
       pointer-events: none;
       background:
         radial-gradient(circle at 50% 15%, rgba(255,255,220,.08), transparent),
@@ -173,7 +187,7 @@
     .grain {
       position: absolute;
       inset: 0;
-      z-index: 5;
+      z-index: 45;
       opacity: .16;
       mix-blend-mode: soft-light;
       pointer-events: none;
@@ -207,7 +221,8 @@
       }
     }
 
-    /* ICONO DE SONIDO — 7% MÁS PEQUEÑO */
+    /* ICONO DE SONIDO
+       SIEMPRE DELANTE DE TODO */
     #speakerIcon {
       position: fixed;
       bottom: 40px;
@@ -225,18 +240,18 @@
       cursor: pointer;
       backdrop-filter: blur(10px);
       box-shadow: 0 0 25px rgba(0,0,0,0.8);
-      opacity: 0.85;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      z-index: 30;
+      opacity: 0;                     /* <-- empieza invisible */
+      transform: scale(0.9);          /* <-- un poquito más pequeño */
+      transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+      z-index: 110;
       touch-action: none;
       user-select: none;
       -webkit-user-drag: none;
     }
 
-    #speakerIcon:hover { opacity: .85; }
+    #speakerIcon:hover { opacity: .9; }
     #speakerIcon:active { transform: scale(.95); }
 
-    /* Tintineo con fade elegante */
     @keyframes attentionBlink {
       0% { opacity: .55; }
       8% { opacity: 1; }
@@ -350,7 +365,7 @@
     <div class="grain"></div>
   </div>
 
-  <!-- ICONO DE SONIDO -->
+  <!-- ICONO DE SONIDO (delante de todo) -->
   <div id="speakerIcon" class="muted">
     <div class="ring">
       <svg viewBox="0 0 60 60">
@@ -389,7 +404,6 @@
     const isPortrait = () => getVH() > getVW();
 
     function applyRandomMask(img) {
-      // corte entre ~82% y 94%, diferente por alga
       const cut = random(82, 94);
       const gradient =
         `linear-gradient(to bottom,
@@ -405,7 +419,7 @@
       img.style.maskRepeat = "no-repeat";
     }
 
-    // Escalonado del título/subtítulo/botones con JS (igual en PC y iPad)
+    // Escalonado del título/subtítulo/botones con JS
     function startTextStagger() {
       const nameEl = container.querySelector(".name");
       const subtitleEl = container.querySelector(".subtitle");
@@ -430,6 +444,18 @@
           el.style.transform = "translateY(0)";
         }, baseDelay + index * step);
       });
+
+      const lastIndex = elements.length - 1;
+      const lastStart = baseDelay + lastIndex * step;
+      const lastDuration = 550;
+      const buttonsDoneAt = lastStart + lastDuration;
+
+      // 1 s después de que se formen los botones → entra el pez
+      setTimeout(() => {
+        if (window.startFishIntro) {
+          window.startFishIntro();
+        }
+      }, buttonsDoneAt + 1000);
     }
 
     function tryReveal() {
@@ -464,10 +490,9 @@
     function loadBG() {
       const portrait = isPortrait();
 
-      // Menos algas en vertical para que no se amontonen
       const baseCount = portrait
-        ? Math.floor(random(3, 5))    // vertical: 3–4 algas
-        : Math.floor(random(7, 11));  // horizontal: 7–10 algas
+        ? Math.floor(random(3, 5))
+        : Math.floor(random(7, 11));
 
       const count = baseCount;
 
@@ -527,7 +552,6 @@
         let center = (index + 1) * segmentWidth;
         let left = center - width / 2;
 
-        // clamp para que nunca se corten en X
         if (left < marginLeft) left = marginLeft;
         if (left + width > vw - marginRight) left = vw - marginRight - width;
 
@@ -541,13 +565,13 @@
       tryReveal();
     }
 
-    /* FRENTE (ALGAS DELANTERAS, TAMBIÉN MENOS EN VERTICAL) */
+    /* FRENTE (ALGAS DELANTERAS) */
     function loadFG() {
       const portrait = isPortrait();
 
       const baseCount = portrait
-        ? Math.floor(random(3, 6))    // vertical: 3–5 algas delante
-        : Math.floor(random(7, 12));  // horizontal: 7–11 algas
+        ? Math.floor(random(3, 6))
+        : Math.floor(random(7, 12));
 
       const count = baseCount;
 
@@ -581,6 +605,23 @@
       }
     }
 
+    // Marca las dos algas enfocadas más "extremas" en X como frontales
+    function markFrontForegroundAlgae() {
+      if (!fgImages.length) return;
+
+      // Limpia cualquier marca anterior
+      fgImages.forEach(img => img.classList.remove("alga-fg-front"));
+
+      if (fgImages.length < 2) return;
+
+      const sorted = [...fgImages].sort((a, b) => a.offsetLeft - b.offsetLeft);
+      const leftMost = sorted[0];
+      const rightMost = sorted[sorted.length - 1];
+
+      leftMost.classList.add("alga-fg-front");
+      rightMost.classList.add("alga-fg-front");
+    }
+
     function layoutFG() {
       if (!fgImages.length) return;
 
@@ -604,6 +645,9 @@
         img.style.top = topOffset + "px";
         img.style.left = left + "px";
       });
+
+      // Después de ubicar todas, elegimos las dos más extremas
+      markFrontForegroundAlgae();
 
       fgReady = true;
       tryReveal();
@@ -710,7 +754,6 @@
       return bassRoot * Math.pow(2, semis / 12);
     }
 
-    /* FADE SUAVE GENERAL */
     function smoothFadeTo(targetValue, durationSeconds) {
       if (!audioCtx || !masterGain) return;
       const now = audioCtx.currentTime;
@@ -845,7 +888,6 @@
       noiseGain = audioCtx.createGain();
       noiseGain.gain.value = 0;
 
-      noiseFilter = document.createElement("div"); // dummy to avoid reference error if not used
       noiseFilter = audioCtx.createBiquadFilter();
       noiseFilter.type = "bandpass";
       noiseFilter.frequency.value = 1500;
@@ -856,7 +898,6 @@
 
       noiseSource.start();
 
-      // ruido tipo televisor antiguo pero suave
       noiseGain.gain.linearRampToValueAtTime(0.024, audioCtx.currentTime + 3);
       scheduleNextNoiseMod();
     }
@@ -928,7 +969,6 @@
       updateVolumeVisual();
     }
 
-    // CONTROL DEL VOLUMEN CON POINTER (evita arrastrar el icono como imagen)
     let dragging = false;
     let lastY = 0;
     let moved = false;
@@ -974,7 +1014,6 @@
       speakerIcon.releasePointerCapture(e.pointerId);
       activePointerId = null;
 
-      // Si no se movió, es un "tap": alterna play/stop
       if (!moved) {
         if (running) stopSea();
         else startSea();
@@ -987,19 +1026,21 @@
     window.addEventListener("load", () => {
       initRing();
     });
+
+    // Función global para mostrar el icono de sonido
+    window.showSpeakerIcon = function showSpeakerIcon() {
+      speakerIcon.style.opacity = "0.85";
+      speakerIcon.style.transform = "scale(1)";
+    };
   })();
   </script>
 
   <!-- SCRIPT PEZ ANIMADO (SIN FONDO PROPIO) -->
   <script>
-  /* -----------------------------
-     CARGA DE IMÁGENES
-  --------------------------------*/
   const pez    = new Image();
   const brillo = new Image();
   const aleta  = new Image();
 
-  // Ajuste de rutas: ahora desde index.html apuntan a /pez/peces/
   pez.src    = "pez/peces/pezprincipal.png";
   brillo.src = "pez/peces/pezbrillo.png";
   aleta.src  = "pez/peces/pezaleta.png";
@@ -1017,9 +1058,6 @@
     };
   });
 
-  /* -----------------------------
-     LIENZO DEL PEZ
-  --------------------------------*/
   let canvas, ctx;
   let fishWidth, fishHeight, scaleFactor;
 
@@ -1032,10 +1070,7 @@
       wrapper.appendChild(canvas);
     }
 
-    // 🔹 tamaño base
     let scale = 0.25;
-
-    // 🔹 en iPhone / iPad → el doble
     const ua = navigator.userAgent || navigator.vendor || "";
     const isiOS = /iPhone|iPad|iPod/i.test(ua);
     if (isiOS) {
@@ -1054,13 +1089,9 @@
     updateFishWrapper();
   }
 
-  /* -----------------------------
-     ESTADOS GLOBALES
-  --------------------------------*/
   let time = 0;
   let last = null;
 
-  /* Posición horizontal */
   let xPos = 0.3;
   let horiz = "drift";
   let leftTarget  = 0.2;
@@ -1070,7 +1101,6 @@
   let swimStart = 0.9;
   let swimEnd   = 0.2;
 
-  /* Posición vertical */
   let yPos   = 0.5;
   let yState = "rest";
   let yTimer = 0;
@@ -1078,7 +1108,6 @@
   let yStart = 0.5;
   let yEnd   = 0.5;
 
-  /* Cola */
   const TAIL_SLOW = 0.16;
   const TAIL_FAST = 0.32;
   let tailFreq       = TAIL_SLOW;
@@ -1086,7 +1115,6 @@
   let tailPhase = 0;
   let tailScale = 1;
 
-  /* Brillo */
   let glowMode       = "low";
   let glowVal        = 0.4;
   let glowStart      = 0;
@@ -1101,21 +1129,17 @@
   const LOW_MIN  = 0.31, LOW_MAX  = 0.53;
   const HIGH_MIN = 0.75, HIGH_MAX = 1.0;
 
-  /* Aleta */
   let finSpeed       = 1.0;
   let finSpeedTarget = 1.0;
   const FIN_LERP     = 1.2;
 
-  /* -----------------------------
-     UTILIDADES
-  --------------------------------*/
+  let fishCanMove = false;
+  let fishIntroStarted = false;
+
   function rand(a,b){ return a + Math.random()*(b-a); }
   function clamp01(v){ return Math.max(0.2, Math.min(0.8, v)); }
   function ease(t){ return t<0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
 
-  /* -----------------------------
-     INICIO DE ESTADO
-  --------------------------------*/
   function initState(){
     glowDur   = rand(7,17);
     glowStart = time;
@@ -1145,11 +1169,10 @@
 
     finSpeed       = 1.0;
     finSpeedTarget = 1.0;
+
+    fishCanMove    = false;
   }
 
-  /* -----------------------------
-     LOOP PRINCIPAL
-  --------------------------------*/
   function start(){ requestAnimationFrame(loop); }
 
   function loop(ts){
@@ -1158,8 +1181,10 @@
     last = ts;
     time += dt;
 
-    updateHorizontal(dt);
-    updateVertical(dt);
+    if (fishCanMove) {
+      updateHorizontal(dt);
+      updateVertical(dt);
+    }
     updateTail(dt);
     updateGlow(dt);
     updateFin(dt);
@@ -1170,9 +1195,6 @@
     requestAnimationFrame(loop);
   }
 
-  /* -----------------------------
-     HORIZONTAL
-  --------------------------------*/
   const DRIFT_SPEED = 0.02;
 
   function updateHorizontal(dt){
@@ -1207,9 +1229,6 @@
     if (xPos > 1) xPos = 1;
   }
 
-  /* -----------------------------
-     VERTICAL
-  --------------------------------*/
   function updateVertical(dt){
     if (yState === "rest") {
       yTimer += dt;
@@ -1241,9 +1260,6 @@
     }
   }
 
-  /* -----------------------------
-     COLA
-  --------------------------------*/
   function updateTail(dt){
     const diff = tailFreqTarget - tailFreq;
     const step = 1.2 * dt;
@@ -1255,9 +1271,6 @@
     tailScale = 0.6 + wave * 0.4;
   }
 
-  /* -----------------------------
-     BRILLO
-  --------------------------------*/
   function updateGlow(dt){
     if (glowTrans) {
       let t = (time - glowTransStart) / glowTransDur;
@@ -1305,9 +1318,6 @@
     }
   }
 
-  /* -----------------------------
-     VELOCIDAD DE ALETA SUAVIZADA
-  --------------------------------*/
   function updateFin(dt){
     const noise =
         Math.sin(time*0.35)*0.10 +
@@ -1324,9 +1334,6 @@
     else finSpeed += Math.sign(diff)*step;
   }
 
-  /* -----------------------------
-     POSICIÓN DEL WRAPPER
-  --------------------------------*/
   function updateFishWrapper(){
     const fw = document.getElementById("fish-wrapper");
     const margin=window.innerWidth*0.03;
@@ -1343,9 +1350,6 @@
     fw.style.top=y+"px";
   }
 
-  /* -----------------------------
-     DIBUJAR PEZ COMPLETO
-  --------------------------------*/
   function drawFish(){
     if(!ctx) return;
     ctx.clearRect(0,0,fishWidth,fishHeight);
@@ -1359,12 +1363,10 @@
     const dstMid=fishWidth*split;
     const dstTail=fishWidth-dstMid;
 
-    // Cuerpo
-    ctx.drawImage(pez,0,0,srcMid,srcH,0,0,dstMid,fishHeight);
-
-    // Cola segmentada
     const seg=14;
     const base=dstTail/seg;
+
+    ctx.drawImage(pez,0,0,srcMid,srcH,0,0,dstMid,fishHeight);
 
     let x=dstMid;
     for(let i=0;i<seg;i++){
@@ -1379,7 +1381,6 @@
       x+=dw;
     }
 
-    /* Brillo */
     ctx.save();
     ctx.globalAlpha=glowVal;
 
@@ -1399,7 +1400,6 @@
     }
     ctx.restore();
 
-    /* Aleta */
     ctx.save();
 
     const aw=aleta.width*scaleFactor;
@@ -1417,6 +1417,30 @@
 
     ctx.restore();
   }
+
+  // Intro del pez + logo sonido
+  window.startFishIntro = function startFishIntro() {
+    if (fishIntroStarted) return;
+    fishIntroStarted = true;
+
+    const fw = document.getElementById("fish-wrapper");
+    if (!fw) return;
+
+    updateFishWrapper();
+
+    fw.style.opacity = "1";
+    fw.style.transform = "translateY(0)";
+
+    setTimeout(() => {
+      fishCanMove = true;
+    }, 1000);
+
+    setTimeout(() => {
+      if (window.showSpeakerIcon) {
+        window.showSpeakerIcon();
+      }
+    }, 2000);
+  };
   </script>
 </body>
 </html>
