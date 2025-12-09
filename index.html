@@ -42,7 +42,6 @@
       object-fit: cover;
       transform-origin: 50% 100%;
       transform: translateZ(0);
-      /* la máscara ahora se pone por JS, distinta en cada alga */
     }
 
     /* Fondo de algas */
@@ -68,8 +67,7 @@
       100% { transform: translateY(0) rotate(0deg) skewX(0deg); }
     }
 
-    /* BLOQUE CENTRAL — TÍTULO Y BOTONES
-       SIEMPRE POR ENCIMA DE TODAS LAS CAPAS VISUALES */
+    /* BLOQUE CENTRAL — TÍTULO Y BOTONES */
     .center-block {
       position: absolute;
       left: 8vw;
@@ -139,9 +137,7 @@
                   0 0 0 1px rgba(15,23,42,.9);
     }
 
-    /* WRAPPER DEL PEZ (CAPA INTERMEDIA)
-       - Empieza invisible y "debajo" con translateY(120%)
-       - Debajo de las algas frontales, encima de algas normales */
+    /* WRAPPER DEL PEZ (CAPA INTERMEDIA) */
     #fish-wrapper{
       position:absolute;
       z-index:30;
@@ -152,7 +148,7 @@
       transition: opacity 0.7s ease-out, transform 0.9s ease-out;
     }
 
-    /* PARTÍCULAS (encima del pez y de las algas, pero detrás de títulos y logo) */
+    /* PARTÍCULAS */
     .particles {
       position: absolute;
       inset: 0;
@@ -221,8 +217,7 @@
       }
     }
 
-    /* ICONO DE SONIDO
-       SIEMPRE DELANTE DE TODO */
+    /* ICONO DE SONIDO */
     #speakerIcon {
       position: fixed;
       bottom: 40px;
@@ -240,8 +235,8 @@
       cursor: pointer;
       backdrop-filter: blur(10px);
       box-shadow: 0 0 25px rgba(0,0,0,0.8);
-      opacity: 0;                     /* <-- empieza invisible */
-      transform: scale(0.9);          /* <-- un poquito más pequeño */
+      opacity: 0;
+      transform: scale(0.9);
       transition: opacity 0.35s ease-out, transform 0.35s ease-out;
       z-index: 110;
       touch-action: none;
@@ -329,12 +324,89 @@
       animation: ringColorShift 12s ease-in-out infinite;
     }
 
-    /* ESTADO INICIAL PARA EFECTO ESCALONADO (JS SE ENCARGA DEL FADE) */
+    /* Estado inicial escalonado */
     .center-block .name,
     .center-block .subtitle,
     .center-block .nav-button {
       opacity: 0;
       transform: translateY(-10px);
+    }
+
+    /* BOTÓN PANTALLA COMPLETA (solo texto y corchetes) */
+    #fs-toggle {
+      position: fixed;
+      left: 16px;
+      bottom: 18px;
+      z-index: 120;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #e5f3ff;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      cursor: pointer;
+      user-select: none;
+      transform-origin: left bottom;
+      animation: fsGlow 7.5s ease-in-out infinite;
+      text-shadow: 0 0 6px rgba(15,23,42,0.9);
+      background: none;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+    }
+
+    #fs-toggle:hover {
+      color: #e0faff;
+      transform: translateY(-1px) scale(1.02);
+      text-shadow:
+        0 0 6px rgba(15,23,42,0.9),
+        0 0 16px rgba(56,189,248,0.55);
+    }
+
+    #fs-toggle:active {
+      transform: translateY(1px) scale(0.99);
+      text-shadow: 0 0 4px rgba(15,23,42,0.95);
+    }
+
+    #fs-toggle span.label {
+      opacity: 0.92;
+    }
+
+    #fs-toggle span.brackets {
+      font-family: "Menlo", "SFMono-Regular", ui-monospace, monospace;
+      font-size: 0.8rem;
+      opacity: 0.92;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      animation: bracketsWave 5.8s ease-in-out infinite;
+    }
+
+    #fs-toggle.fs-active {
+      color: #a5f3fc;
+    }
+
+    @keyframes fsGlow {
+      0%   { opacity: 0.82; transform: scale(1); }
+      30%  { opacity: 0.96; transform: scale(1.02); }
+      60%  { opacity: 0.88; transform: scale(1); }
+      100% { opacity: 0.82; transform: scale(1); }
+    }
+
+    @keyframes bracketsWave {
+      0%   { transform: translateX(0) scale(1);   text-shadow: 0 0 0 rgba(56,189,248,0.0); }
+      40%  { transform: translateX(1px) scale(1.03); text-shadow: 0 0 10px rgba(56,189,248,0.6); }
+      80%  { transform: translateX(0) scale(1);   text-shadow: 0 0 0 rgba(56,189,248,0.0); }
+      100% { transform: translateX(0) scale(1);   }
+    }
+
+    @media (max-width: 768px) {
+      #fs-toggle {
+        font-size: 0.78rem;
+        left: 12px;
+        bottom: 12px;
+      }
     }
   </style>
 </head>
@@ -365,7 +437,7 @@
     <div class="grain"></div>
   </div>
 
-  <!-- ICONO DE SONIDO (delante de todo) -->
+  <!-- Icono de sonido -->
   <div id="speakerIcon" class="muted">
     <div class="ring">
       <svg viewBox="0 0 60 60">
@@ -373,6 +445,12 @@
       </svg>
     </div>
     <img src="sonido/icono.png" alt="Audio marino" draggable="false">
+  </div>
+
+  <!-- Botón pantalla completa (solo texto) -->
+  <div id="fs-toggle">
+    <span class="label">pantalla completa</span>
+    <span class="brackets">[  ]</span>
   </div>
 
   <!-- SCRIPT FONDO MARINO -->
@@ -419,7 +497,7 @@
       img.style.maskRepeat = "no-repeat";
     }
 
-    // Escalonado del título/subtítulo/botones con JS
+    // Escalonado del título/subtítulo/botones
     function startTextStagger() {
       const nameEl = container.querySelector(".name");
       const subtitleEl = container.querySelector(".subtitle");
@@ -434,8 +512,8 @@
         el.style.transform = "translateY(-10px)";
       });
 
-      const baseDelay = 150; // ms
-      const step = 120;      // ms entre cada uno
+      const baseDelay = 150;
+      const step = 120;
 
       elements.forEach((el, index) => {
         setTimeout(() => {
@@ -450,7 +528,7 @@
       const lastDuration = 550;
       const buttonsDoneAt = lastStart + lastDuration;
 
-      // 1 s después de que se formen los botones → entra el pez
+      // 1 s después de los botones → entra el pez
       setTimeout(() => {
         if (window.startFishIntro) {
           window.startFishIntro();
@@ -466,7 +544,7 @@
       }
     }
 
-    // Evita que se repitan demasiado los mismos PNG
+    // Evita clustering de PNG
     function pickAlgaSrcNoCluster(prev1, prev2) {
       let candidates = algaeSources.filter(s => s !== prev1 && s !== prev2);
       if (!candidates.length) candidates = algaeSources.filter(s => s !== prev1);
@@ -486,7 +564,7 @@
       loadFG();
     }
 
-    /* FONDO (ALGAS DESENFOCADAS, POQUITAS EN VERTICAL) */
+    /* FONDO (ALGAS DESENFOCADAS) */
     function loadBG() {
       const portrait = isPortrait();
 
@@ -605,13 +683,10 @@
       }
     }
 
-    // Marca las dos algas enfocadas más "extremas" en X como frontales
+    // Marca las dos algas enfocadas más extremas
     function markFrontForegroundAlgae() {
       if (!fgImages.length) return;
-
-      // Limpia cualquier marca anterior
       fgImages.forEach(img => img.classList.remove("alga-fg-front"));
-
       if (fgImages.length < 2) return;
 
       const sorted = [...fgImages].sort((a, b) => a.offsetLeft - b.offsetLeft);
@@ -646,7 +721,6 @@
         img.style.left = left + "px";
       });
 
-      // Después de ubicar todas, elegimos las dos más extremas
       markFrontForegroundAlgae();
 
       fgReady = true;
@@ -1027,7 +1101,7 @@
       initRing();
     });
 
-    // Función global para mostrar el icono de sonido
+    // Mostrar icono de sonido cuando toque
     window.showSpeakerIcon = function showSpeakerIcon() {
       speakerIcon.style.opacity = "0.85";
       speakerIcon.style.transform = "scale(1)";
@@ -1035,7 +1109,7 @@
   })();
   </script>
 
-  <!-- SCRIPT PEZ ANIMADO (SIN FONDO PROPIO) -->
+  <!-- SCRIPT PEZ ANIMADO -->
   <script>
   const pez    = new Image();
   const brillo = new Image();
@@ -1441,6 +1515,62 @@
       }
     }, 2000);
   };
+  </script>
+
+  <!-- SCRIPT PANTALLA COMPLETA (BOTÓN INFERIOR IZQUIERDO) -->
+  <script>
+  (function () {
+    "use strict";
+
+    const fsToggle = document.getElementById("fs-toggle");
+
+    function requestFullscreen(elem) {
+      if (elem.requestFullscreen) return elem.requestFullscreen();
+      if (elem.webkitRequestFullscreen) return elem.webkitRequestFullscreen();
+      if (elem.mozRequestFullScreen) return elem.mozRequestFullScreen();
+      if (elem.msRequestFullscreen) return elem.msRequestFullscreen();
+    }
+
+    function exitFullscreen() {
+      if (document.exitFullscreen) return document.exitFullscreen();
+      if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+      if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
+      if (document.msExitFullscreen) return document.msExitFullscreen();
+    }
+
+    function isFullscreen() {
+      return (
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      );
+    }
+
+    function updateFsButtonState() {
+      if (isFullscreen()) {
+        fsToggle.classList.add("fs-active");
+      } else {
+        fsToggle.classList.remove("fs-active");
+      }
+    }
+
+    document.addEventListener("fullscreenchange", updateFsButtonState);
+    document.addEventListener("webkitfullscreenchange", updateFsButtonState);
+    document.addEventListener("mozfullscreenchange", updateFsButtonState);
+    document.addEventListener("MSFullscreenChange", updateFsButtonState);
+
+    fsToggle.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isFullscreen()) {
+        exitFullscreen();
+      } else {
+        requestFullscreen(document.documentElement);
+      }
+    });
+  })();
   </script>
 </body>
 </html>
