@@ -817,7 +817,7 @@
 
     let running = false;
     let userVolume = 0.45;
-    const MIN_VOL = 0.12;
+    const MIN_VOL = 0.01;
     const MAX_VOL = 0.7;
 
     let padTimeoutId = null;
@@ -1104,7 +1104,7 @@
       bubFilter.frequency.setValueAtTime(900, now);
       bubFilter.frequency.exponentialRampToValueAtTime(400, now + 0.2);
 
-      const level = (0.18 + Math.random() * 0.40) * 0.5;
+      const level = (0.18 + Math.random() * 0.40) * 0.25;
 
       envGain.gain.setValueAtTime(0.0001, now);
       envGain.gain.linearRampToValueAtTime(level, now+0.02);
