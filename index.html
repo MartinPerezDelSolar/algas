@@ -57,19 +57,31 @@
     .alga-bg { z-index: 5; }
 
     /* Algas enfocadas siempre detrás del pez */
-    .alga-fg {
-      z-index: 20;
-      filter: saturate(.95);
-      animation: corrientePuppet 12s ease-in-out infinite;
-    }
+  .alga-fg {
+  z-index: 20;
+  filter: saturate(.95);
+  animation: corrientePuppet 12s ease-in-out infinite;
+}
 
-    @keyframes corrientePuppet {
-      0%   { transform: translateY(0) rotate(0deg) skewX(0deg); }
-      25%  { transform: translateY(-6px) rotate(.4deg) skewX(1.2deg); }
-      50%  { transform: translateY(-10px) rotate(.9deg) skewX(2.4deg); }
-      75%  { transform: translateY(-5px) rotate(.3deg) skewX(1.0deg); }
-      100% { transform: translateY(0) rotate(0deg) skewX(0deg); }
-    }
+/* Más inclinación hacia la derecha y un ligero empuje lateral */
+@keyframes corrientePuppet {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg) skewX(0deg);
+  }
+  25% {
+    transform: translateY(-6px) translateX(-4px) rotate(-0.8deg) skewX(-3deg);
+  }
+  50% {
+    transform: translateY(-10px) translateX(-7px) rotate(-1.6deg) skewX(-5deg);
+  }
+  75% {
+    transform: translateY(-5px) translateX(-3px) rotate(-0.6deg) skewX(-2.2deg);
+  }
+  100% {
+    transform: translateY(0) translateX(0) rotate(0deg) skewX(0deg);
+  }
+}
+
 
     /* BLOQUE CENTRAL — TÍTULO Y BOTONES */
     .center-block {
