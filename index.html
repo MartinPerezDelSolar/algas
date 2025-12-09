@@ -352,7 +352,7 @@
       background: none;
       border: none;
       box-shadow: none;
-      padding: 8px 14px; /* zona rectangular clicable más grande */
+      padding: 8px 14px;
       animation: fsFloat 18s ease-in-out infinite;
     }
 
@@ -421,6 +421,13 @@
       100% { transform: translateX(0) scale(1);   }
     }
 
+    /* 🔹 Ocultar el botón de pantalla completa en equipos móviles / tablets */
+    @media (max-width: 1024px) {
+      #fs-toggle {
+        display: none !important;
+      }
+    }
+
     @media (max-width: 768px) {
       #fs-toggle {
         font-size: 0.78rem;
@@ -467,7 +474,7 @@
     <img src="sonido/icono.png" alt="Audio marino" draggable="false">
   </div>
 
-  <!-- Botón pantalla completa (solo texto) -->
+  <!-- Botón pantalla completa (solo texto) - oculto en móviles -->
   <button id="fs-toggle" type="button">
     <span class="label">pantalla completa</span>
     <span class="brackets">[  ]</span>
@@ -588,7 +595,7 @@
     function loadBG() {
       const portrait = isPortrait();
 
-      // EN VERTICAL: SIEMPRE 2 ALGAS DE FONDO
+      // En vertical: siempre 2 algas de fondo
       const count = portrait
         ? 2
         : Math.floor(random(7, 11));
@@ -643,7 +650,7 @@
 
       bgImages.forEach((img, index) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        // en vertical, un poco más angostas para no cortarse
+        // En vertical, más angostas para no cortarse
         let maxWidth = portrait ? vw * 0.48 : vw * 0.35;
 
         let width = totalHeight * ratio;
@@ -651,7 +658,7 @@
 
         let center;
         if (portrait && n === 2) {
-          // una hacia la izquierda, otra hacia la derecha
+          // Una izquierda, otra derecha
           center = index === 0 ? vw * 0.25 : vw * 0.75;
         } else {
           center = (index + 1) * segmentWidth;
@@ -733,7 +740,7 @@
 
       if (best) {
         best.classList.add("alga-fg-front");
-        best.style.opacity = 0.35; // semitransparente para que el pez se esconda atrás
+        best.style.opacity = 0.35;
       }
     }
 
@@ -761,7 +768,6 @@
         img.style.left = left + "px";
       });
 
-      // Solo una alga central delante del pez
       markCenterForegroundAlga();
 
       fgReady = true;
@@ -864,8 +870,6 @@
     const ringCircle = document.getElementById("ringCircle");
     let ringLength = 0;
 
-    /* ---------- NODOS DE BURBUJAS / REVERB / DELAY ---------- */
-
     const BASE_FREQ = 116;
     const FIRE_INTENSITY = 4.4;
 
@@ -920,7 +924,6 @@
 
       filter.connect(masterGain);
 
-      /* --- REVERB BURBUJAS --- */
       reverbDelay = audioCtx.createDelay();
       reverbFeedback = audioCtx.createGain();
       reverbOut = audioCtx.createGain();
@@ -934,7 +937,6 @@
       reverbDelay.connect(reverbOut);
       reverbOut.connect(masterGain);
 
-      /* --- DELAY MODULADO GLOBAL --- */
       modDelay = audioCtx.createDelay(1.5);
       modFeedback = audioCtx.createGain();
       modOut = audioCtx.createGain();
@@ -950,7 +952,6 @@
       modDelay.connect(modOut);
       modOut.connect(audioCtx.destination);
 
-      // LFO que mueve el delay entre ~0.5 y 1.0 s
       lfo = audioCtx.createOscillator();
       lfoGain = audioCtx.createGain();
       modDelay.delayTime.value = 0.75;
@@ -968,8 +969,6 @@
 
       smoothFadeTo(userVolume, 2.5);
     }
-
-    /* ---------- CAPAS SONORAS MAR ---------- */
 
     function createBassLayer() {
       [bassRoot, bassRoot * 1.2].forEach((f, i) => {
@@ -1098,8 +1097,6 @@
       noiseTimeoutId = setTimeout(scheduleNextNoiseMod, t * 1000);
     }
 
-    /* ---------- BURBUJAS INTEGRADAS ---------- */
-
     function spawnBubble(startTime) {
       if (!audioCtx || !masterGain) return;
 
@@ -1141,7 +1138,6 @@
       bubFilter.frequency.setValueAtTime(900, now);
       bubFilter.frequency.exponentialRampToValueAtTime(400, now + 0.2);
 
-      // volumen de burbujas a la mitad
       const level = (0.18 + Math.random() * 0.40) * 0.5;
 
       envGain.gain.setValueAtTime(0.0001, now);
@@ -1195,8 +1191,6 @@
       scheduleBubbles();
     }
 
-    /* ---------- CONTROL GENERAL ---------- */
-
     function startSea() {
       if (running) return;
       running = true;
@@ -1227,7 +1221,6 @@
       if (padTimeoutId) { clearTimeout(padTimeoutId); padTimeoutId = null; }
       if (leadTimeoutId) { clearTimeout(leadTimeoutId); leadTimeoutId = null; }
       if (noiseTimeoutId) { clearTimeout(noiseTimeoutId); noiseTimeoutId = null; }
-      // los timeouts de burbujas dejan de reprogramarse porque running=false
 
       setTimeout(() => {
         if (audioCtx) {
@@ -1314,7 +1307,6 @@
       initRing();
     });
 
-    // Mostrar icono de sonido cuando toque
     window.showSpeakerIcon = function showSpeakerIcon() {
       speakerIcon.style.opacity = "0.85";
       speakerIcon.style.transform = "scale(1)";
@@ -1705,7 +1697,6 @@
     ctx.restore();
   }
 
-  // Intro del pez + logo sonido
   window.startFishIntro = function startFishIntro() {
     if (fishIntroStarted) return;
     fishIntroStarted = true;
@@ -1730,7 +1721,7 @@
   };
   </script>
 
-  <!-- SCRIPT PANTALLA COMPLETA (BOTÓN INFERIOR IZQUIERDO) -->
+  <!-- SCRIPT PANTALLA COMPLETA (solo para escritorio) -->
   <script>
   (function () {
     "use strict";
@@ -1748,7 +1739,7 @@
       if (f) {
         return f.call(elem);
       } else {
-        alert("En este dispositivo el modo pantalla completa puede no estar disponible desde la web.\nPuedes usar las opciones del navegador (o agregar a pantalla de inicio) para verlo más grande.");
+        alert("En este dispositivo el modo pantalla completa puede no estar disponible desde la web.");
       }
     }
 
@@ -1790,7 +1781,6 @@
       if (isFullscreen()) {
         exitFullscreen();
       } else {
-        // probamos con el elemento raíz del documento o el body
         const target = document.documentElement || document.body;
         requestFullscreen(target);
       }
