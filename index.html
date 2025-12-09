@@ -44,19 +44,14 @@
       transform: translateZ(0);
     }
 
-    /* Fondo de algas */
+    /* Fondo de algas (detrás de todo) */
     .alga-bg { z-index: 5; }
 
-    /* Algas enfocadas normales (delante del fondo, detrás del pez) */
+    /* Algas enfocadas delante del fondo, pero SIEMPRE detrás del pez */
     .alga-fg {
       z-index: 20;
       filter: saturate(.95);
       animation: corrientePuppet 12s ease-in-out infinite;
-    }
-
-    /* Alga central por delante del pez */
-    .alga-fg-front {
-      z-index: 32;
     }
 
     @keyframes corrientePuppet {
@@ -356,7 +351,6 @@
       animation: fsFloat 18s ease-in-out infinite;
     }
 
-    /* Animación acuosa del texto del botón */
     @keyframes fsFloat {
       0%, 55%, 100% {
         transform: translateY(0);
@@ -421,7 +415,7 @@
       100% { transform: translateX(0) scale(1);   }
     }
 
-    /* 🔹 Ocultar el botón de pantalla completa en equipos móviles / tablets */
+    /* Ocultar el botón de pantalla completa en móviles / tablets */
     @media (max-width: 1024px) {
       #fs-toggle {
         display: none !important;
@@ -456,7 +450,7 @@
       </nav>
     </div>
 
-    <!-- Pez animado, sin su propio fondo -->
+    <!-- Pez animado -->
     <div id="fish-wrapper"></div>
 
     <div class="particles" id="particles-layer"></div>
@@ -474,7 +468,7 @@
     <img src="sonido/icono.png" alt="Audio marino" draggable="false">
   </div>
 
-  <!-- Botón pantalla completa (solo texto) - oculto en móviles -->
+  <!-- Botón pantalla completa (solo escritorio) -->
   <button id="fs-toggle" type="button">
     <span class="label">pantalla completa</span>
     <span class="brackets">[  ]</span>
@@ -595,7 +589,6 @@
     function loadBG() {
       const portrait = isPortrait();
 
-      // En vertical: siempre 2 algas de fondo
       const count = portrait
         ? 2
         : Math.floor(random(7, 11));
@@ -650,7 +643,6 @@
 
       bgImages.forEach((img, index) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
-        // En vertical, más angostas para no cortarse
         let maxWidth = portrait ? vw * 0.48 : vw * 0.35;
 
         let width = totalHeight * ratio;
@@ -658,7 +650,6 @@
 
         let center;
         if (portrait && n === 2) {
-          // Una izquierda, otra derecha
           center = index === 0 ? vw * 0.25 : vw * 0.75;
         } else {
           center = (index + 1) * segmentWidth;
@@ -679,7 +670,7 @@
       tryReveal();
     }
 
-    /* FRENTE (ALGAS DELANTERAS) */
+    /* FRENTE (ALGAS DELANTERAS, SIEMPRE DETRÁS DEL PEZ) */
     function loadFG() {
       const portrait = isPortrait();
 
@@ -694,6 +685,8 @@
 
       let prev1 = null;
       let prev2 = null;
+
+      const overlay = container.querySelector(".overlay");
 
       for (let i = 0; i < count; i++) {
         const img = document.createElement("img");
@@ -715,32 +708,7 @@
         };
 
         fgImages.push(img);
-        container.insertBefore(img, container.querySelector(".overlay"));
-      }
-    }
-
-    // Marca UNA alga (la más cercana al centro) delante del pez, semitransparente
-    function markCenterForegroundAlga() {
-      if (!fgImages.length) return;
-      fgImages.forEach(img => img.classList.remove("alga-fg-front"));
-
-      const vw = getVW();
-      const centerX = vw / 2;
-      let best = null;
-      let bestDist = Infinity;
-
-      fgImages.forEach(img => {
-        const cx = img.offsetLeft + img.offsetWidth / 2;
-        const d = Math.abs(cx - centerX);
-        if (d < bestDist) {
-          bestDist = d;
-          best = img;
-        }
-      });
-
-      if (best) {
-        best.classList.add("alga-fg-front");
-        best.style.opacity = 0.35;
+        container.insertBefore(img, overlay);
       }
     }
 
@@ -767,8 +735,6 @@
         img.style.top = topOffset + "px";
         img.style.left = left + "px";
       });
-
-      markCenterForegroundAlga();
 
       fgReady = true;
       tryReveal();
@@ -1721,7 +1687,7 @@
   };
   </script>
 
-  <!-- SCRIPT PANTALLA COMPLETA (solo para escritorio) -->
+  <!-- SCRIPT PANTALLA COMPLETA (solo escritorio) -->
   <script>
   (function () {
     "use strict";
