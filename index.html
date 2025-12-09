@@ -865,7 +865,7 @@
 
     let running = false;
     let userVolume = 0.45;
-    const MIN_VOL = 0.12;
+    const MIN_VOL = 0.02;
     const MAX_VOL = 0.7;
 
     let padTimeoutId = null;
@@ -1295,7 +1295,7 @@
       lastY = e.clientY;
 
       userVolume = Math.max(
-        MIN_VOL,
+       0,
         Math.min(MAX_VOL, userVolume - dy * 0.002)
       );
       applyVolumeChange();
