@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <title>Fondo marino · Andrea Lértora</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
@@ -23,7 +24,7 @@
       color: #e5f3ff;
     }
 
-    /* Cuando congelamos para rotación móvil, apagamos animaciones y transiciones */
+    /* Congelar animaciones en rotación móvil rápida */
     body.freeze * {
       animation: none !important;
       transition: none !important;
@@ -31,7 +32,7 @@
 
     .sea-container {
       position: fixed;
-      inset: 0;         /* top:0; right:0; bottom:0; left:0; */
+      inset: 0;
       width: 100%;
       height: 100%;
       opacity: 0;
@@ -220,11 +221,21 @@
       }
     }
 
+    /* ELEMENTOS DE UI QUE SE DESVANECEN EN FULLSCREEN */
+    .ui-fade {
+      transition: opacity .6s ease-in-out, transform .6s ease-in-out;
+    }
+    .ui-fade.fs-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+    }
+
     /* ICONO DE SONIDO */
     #speakerIcon {
       position: fixed;
-      bottom: 40px;
-      right: 40px;
+      bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+      right: calc(40px + env(safe-area-inset-right, 0px));
       width: min(6.51vw, 6.51vh);
       height: min(6.51vw, 6.51vh);
       min-width: 39px;
@@ -335,11 +346,11 @@
       transform: translateY(-10px);
     }
 
-    /* BOTÓN PANTALLA COMPLETA (solo texto y corchetes, área clic mayor) */
+    /* BOTÓN PANTALLA COMPLETA (texto + corchetes) */
     #fs-toggle {
       position: fixed;
-      left: 16px;
-      bottom: 18px;
+      left: calc(16px + env(safe-area-inset-left, 0px));
+      bottom: calc(18px + env(safe-area-inset-bottom, 0px));
       z-index: 120;
       font-size: 0.72rem;
       letter-spacing: 0.18em;
@@ -423,7 +434,7 @@
       100% { transform: translateX(0) scale(1);   }
     }
 
-    /* Ocultar el botón de pantalla completa en móviles / tablets */
+    /* Ocultar botón fullscreen en móviles / tablets */
     @media (max-width: 1024px) {
       #fs-toggle {
         display: none !important;
@@ -433,8 +444,6 @@
     @media (max-width: 768px) {
       #fs-toggle {
         font-size: 0.78rem;
-        left: 12px;
-        bottom: 12px;
       }
     }
   </style>
@@ -443,7 +452,7 @@
 <body>
   <div class="sea-container" id="sea-container">
 
-    <div class="center-block">
+    <div class="center-block ui-fade">
       <div class="name">
         <span class="first">Andrea</span>
         <span class="last">Lértora</span>
@@ -467,7 +476,7 @@
   </div>
 
   <!-- Icono de sonido -->
-  <div id="speakerIcon" class="muted">
+  <div id="speakerIcon" class="muted ui-fade">
     <div class="ring">
       <svg viewBox="0 0 60 60">
         <circle id="ringCircle" cx="30" cy="30" r="24"></circle>
@@ -477,7 +486,7 @@
   </div>
 
   <!-- Botón pantalla completa (solo escritorio) -->
-  <button id="fs-toggle" type="button">
+  <button id="fs-toggle" type="button" class="ui-fade">
     <span class="label">pantalla completa</span>
     <span class="brackets">[  ]</span>
   </button>
@@ -828,7 +837,7 @@
   })();
   </script>
 
-  <!-- SCRIPT DEL SONIDO (con burbujas más suaves) -->
+  <!-- SCRIPT DEL SONIDO (burbujas más suaves) -->
   <script>
   (function () {
     "use strict";
@@ -1126,7 +1135,7 @@
       bubFilter.frequency.setValueAtTime(900, now);
       bubFilter.frequency.exponentialRampToValueAtTime(400, now + 0.2);
 
-      const level = (0.18 + Math.random() * 0.40) * 0.5; // burbujas a la mitad
+      const level = (0.18 + Math.random() * 0.40) * 0.5; // burbujas más suaves
 
       envGain.gain.setValueAtTime(0.0001, now);
       envGain.gain.linearRampToValueAtTime(level, now+0.02);
@@ -1296,6 +1305,7 @@
     });
 
     window.showSpeakerIcon = function showSpeakerIcon() {
+      speakerIcon.classList.remove("fs-hidden");
       speakerIcon.style.opacity = "0.85";
       speakerIcon.style.transform = "scale(1)";
     };
@@ -1709,12 +1719,14 @@
   };
   </script>
 
-  <!-- SCRIPT PANTALLA COMPLETA (solo escritorio) -->
+  <!-- SCRIPT PANTALLA COMPLETA (PC: fade de toda la UI) -->
   <script>
   (function () {
     "use strict";
 
     const fsToggle = document.getElementById("fs-toggle");
+    const uiFaders = document.querySelectorAll(".ui-fade");
+    let fsUiTimer = null;
 
     function requestFullscreen(elem) {
       if (!elem) return;
@@ -1749,11 +1761,42 @@
       );
     }
 
+    // Mostrar UI en fullscreen
+    function showUiFs() {
+      uiFaders.forEach(el => {
+        el.classList.remove("fs-hidden");
+        el.style.opacity = "";          // vuelve al valor de CSS
+        el.style.transform = "";        // vuelve al valor de CSS
+      });
+    }
+
+    // Ocultar UI en fullscreen
+    function hideUiFs() {
+      uiFaders.forEach(el => {
+        el.classList.add("fs-hidden");
+        el.style.opacity = "0";
+        el.style.transform = "translateY(6px)";
+      });
+    }
+
+    function scheduleHideUiFs() {
+      if (fsUiTimer) clearTimeout(fsUiTimer);
+      fsUiTimer = setTimeout(() => {
+        if (isFullscreen()) {
+          hideUiFs();
+        }
+      }, 2200);
+    }
+
     function updateFsButtonState() {
       if (isFullscreen()) {
         fsToggle.classList.add("fs-active");
+        showUiFs();
+        scheduleHideUiFs();
       } else {
         fsToggle.classList.remove("fs-active");
+        if (fsUiTimer) clearTimeout(fsUiTimer);
+        showUiFs();
       }
     }
 
@@ -1771,7 +1814,15 @@
       } else {
         const target = document.documentElement || document.body;
         requestFullscreen(target);
+        setTimeout(updateFsButtonState, 300);
       }
+    });
+
+    // Mouse mueve → mostrar UI y volver a ocultar con delay
+    document.addEventListener("mousemove", function () {
+      if (!isFullscreen()) return;
+      showUiFs();
+      scheduleHideUiFs();
     });
   })();
   </script>
