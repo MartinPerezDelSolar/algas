@@ -54,7 +54,7 @@
       animation: corrientePuppet 12s ease-in-out infinite;
     }
 
-    /* Las dos algas elegidas a los extremos → delante del pez */
+    /* Alga central por delante del pez */
     .alga-fg-front {
       z-index: 32;
     }
@@ -683,18 +683,29 @@
       }
     }
 
-    // Marca las dos algas enfocadas más extremas
-    function markFrontForegroundAlgae() {
+    // Marca UNA alga (la más cercana al centro) delante del pez, semitransparente
+    function markCenterForegroundAlga() {
       if (!fgImages.length) return;
       fgImages.forEach(img => img.classList.remove("alga-fg-front"));
-      if (fgImages.length < 2) return;
 
-      const sorted = [...fgImages].sort((a, b) => a.offsetLeft - b.offsetLeft);
-      const leftMost = sorted[0];
-      const rightMost = sorted[sorted.length - 1];
+      const vw = getVW();
+      const centerX = vw / 2;
+      let best = null;
+      let bestDist = Infinity;
 
-      leftMost.classList.add("alga-fg-front");
-      rightMost.classList.add("alga-fg-front");
+      fgImages.forEach(img => {
+        const cx = img.offsetLeft + img.offsetWidth / 2;
+        const d = Math.abs(cx - centerX);
+        if (d < bestDist) {
+          bestDist = d;
+          best = img;
+        }
+      });
+
+      if (best) {
+        best.classList.add("alga-fg-front");
+        best.style.opacity = 0.35; // semitransparente para que el pez se esconda atrás
+      }
     }
 
     function layoutFG() {
@@ -721,7 +732,8 @@
         img.style.left = left + "px";
       });
 
-      markFrontForegroundAlgae();
+      // Solo una alga central delante del pez
+      markCenterForegroundAlga();
 
       fgReady = true;
       tryReveal();
@@ -793,7 +805,7 @@
   })();
   </script>
 
-  <!-- SCRIPT DEL SONIDO -->
+  <!-- SCRIPT DEL SONIDO (con burbujas integradas) -->
   <script>
   (function () {
     "use strict";
@@ -804,7 +816,7 @@
 
     let running = false;
     let userVolume = 0.45;
-    const MIN_VOL = 0.12;
+    const MIN_VOL = 0.05;
     const MAX_VOL = 0.7;
 
     let padTimeoutId = null;
@@ -823,9 +835,37 @@
     const ringCircle = document.getElementById("ringCircle");
     let ringLength = 0;
 
+    /* ---------- NODOS DE BURBUJAS / REVERB / DELAY ---------- */
+
+    const BASE_FREQ = 116;
+    const FIRE_INTENSITY = 4.4;
+
+    const scaleSteps = [
+      0, 2, 4, 7, 9,
+      12,14,16,19,21,
+      24,26,28,31,33
+    ];
+
+    let reverbDelay = null;
+    let reverbFeedback = null;
+    let reverbOut = null;
+
+    let modDelay = null;
+    let modFeedback = null;
+    let modOut = null;
+
+    let lfo = null;
+    let lfoGain = null;
+
     function randomPentatonicFreq() {
-      const semis = 24 + pentatonicSteps[Math.floor(Math.random() * pentatonicSteps.length)];
-      return bassRoot * Math.pow(2, semis / 12);
+      const step = pentatonicSteps[Math.floor(Math.random() * pentatonicSteps.length)];
+      return bassRoot * Math.pow(2, step / 12);
+    }
+
+    function randomScaleFreq() {
+      const step = scaleSteps[Math.floor(Math.random() * scaleSteps.length)];
+      const down9 = Math.pow(2, -9/12);
+      return BASE_FREQ * Math.pow(2, step/12) * down9;
     }
 
     function smoothFadeTo(targetValue, durationSeconds) {
@@ -850,15 +890,57 @@
       filter.Q.value = 0.7;
 
       filter.connect(masterGain);
+
+      /* --- REVERB BURBUJAS --- */
+      reverbDelay = audioCtx.createDelay();
+      reverbFeedback = audioCtx.createGain();
+      reverbOut = audioCtx.createGain();
+
+      reverbDelay.delayTime.value = 0.09;
+      reverbFeedback.gain.value = 0.32;
+      reverbOut.gain.value = 0.25;
+
+      reverbDelay.connect(reverbFeedback);
+      reverbFeedback.connect(reverbDelay);
+      reverbDelay.connect(reverbOut);
+      reverbOut.connect(masterGain);
+
+      /* --- DELAY MODULADO GLOBAL --- */
+      modDelay = audioCtx.createDelay(1.5);
+      modFeedback = audioCtx.createGain();
+      modOut = audioCtx.createGain();
+
+      modFeedback.gain.value = 0.35;
+      modOut.gain.value = 0.20;
+
       masterGain.connect(audioCtx.destination);
+      masterGain.connect(modDelay);
+
+      modDelay.connect(modFeedback);
+      modFeedback.connect(modDelay);
+      modDelay.connect(modOut);
+      modOut.connect(audioCtx.destination);
+
+      // LFO que mueve el delay entre ~0.5 y 1.0 s
+      lfo = audioCtx.createOscillator();
+      lfoGain = audioCtx.createGain();
+      modDelay.delayTime.value = 0.75;
+      lfoGain.gain.value = 0.25;
+      lfo.frequency.value = 0.5;
+      lfo.connect(lfoGain);
+      lfoGain.connect(modDelay.delayTime);
+      lfo.start();
 
       createBassLayer();
       startPadLoop();
       createLeadVoice();
       createNoiseLayer();
+      startBubbleScheduler();
 
       smoothFadeTo(userVolume, 2.5);
     }
+
+    /* ---------- CAPAS SONORAS MAR ---------- */
 
     function createBassLayer() {
       [bassRoot, bassRoot * 1.2].forEach((f, i) => {
@@ -987,6 +1069,105 @@
       noiseTimeoutId = setTimeout(scheduleNextNoiseMod, t * 1000);
     }
 
+    /* ---------- BURBUJAS INTEGRADAS ---------- */
+
+    function spawnBubble(startTime) {
+      if (!audioCtx || !masterGain) return;
+
+      const osc = audioCtx.createOscillator();
+      const bubFilter = audioCtx.createBiquadFilter();
+      const envGain = audioCtx.createGain();
+      const sendGain = audioCtx.createGain();
+
+      osc.type = "sine";
+      bubFilter.type = "lowpass";
+      osc.connect(bubFilter);
+      bubFilter.connect(envGain);
+      envGain.connect(masterGain);
+      envGain.connect(sendGain);
+      sendGain.connect(reverbDelay);
+
+      const now = startTime;
+      const target = randomScaleFreq();
+
+      const dirUp = Math.random() < 0.5;
+      const interval = Math.pow(2, 3/12);
+
+      let startF, endF;
+      if (dirUp) {
+        startF = target / interval;
+        endF   = target;
+      } else {
+        startF = target * interval;
+        endF   = target;
+      }
+
+      try {
+        osc.frequency.setValueAtTime(startF, now);
+        osc.frequency.exponentialRampToValueAtTime(endF, now + 0.18);
+      } catch {
+        osc.frequency.setValueAtTime(endF, now);
+      }
+
+      bubFilter.frequency.setValueAtTime(900, now);
+      bubFilter.frequency.exponentialRampToValueAtTime(400, now + 0.2);
+
+      // volumen de burbujas a la mitad
+      const level = (0.18 + Math.random() * 0.40) * 0.5;
+
+      envGain.gain.setValueAtTime(0.0001, now);
+      envGain.gain.linearRampToValueAtTime(level, now+0.02);
+      envGain.gain.linearRampToValueAtTime(level*0.3, now+0.09);
+      envGain.gain.linearRampToValueAtTime(0.0001, now+0.20);
+
+      sendGain.gain.setValueAtTime(level*0.5, now);
+      sendGain.gain.linearRampToValueAtTime(0, now+0.35);
+
+      osc.start(now);
+      osc.stop(now+0.22);
+    }
+
+    function bumpDelay(t) {
+      if (!modOut) return;
+      modOut.gain.cancelScheduledValues(t);
+      modOut.gain.setValueAtTime(0.15, t);
+      modOut.gain.linearRampToValueAtTime(0.40, t+0.5);
+      modOut.gain.linearRampToValueAtTime(0.12, t+1.2);
+    }
+
+    function playBubbleCluster() {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const n = 1 + Math.floor(Math.random()*5);
+      for (let i=0; i<n; i++) {
+        const jitter = Math.random()*0.09;
+        spawnBubble(now + jitter);
+      }
+      bumpDelay(now);
+    }
+
+    function scheduleBubbles() {
+      if (!running || !audioCtx || audioCtx.state !== "running") return;
+
+      const base = FIRE_INTENSITY;
+      const factor = 0.05 + Math.random()*0.10;
+      const rate = base * factor;
+      const interval = 1000 / rate;
+
+      setTimeout(() => {
+        if (running && audioCtx && audioCtx.state === "running") {
+          playBubbleCluster();
+          scheduleBubbles();
+        }
+      }, interval);
+    }
+
+    function startBubbleScheduler() {
+      scheduleBubbles();
+    }
+
+    /* ---------- CONTROL GENERAL ---------- */
+
     function startSea() {
       if (running) return;
       running = true;
@@ -998,8 +1179,10 @@
       } else if (audioCtx.state === "suspended") {
         audioCtx.resume();
         smoothFadeTo(userVolume, 2.0);
+        startBubbleScheduler();
       } else {
         smoothFadeTo(userVolume, 2.0);
+        startBubbleScheduler();
       }
     }
 
@@ -1015,6 +1198,7 @@
       if (padTimeoutId) { clearTimeout(padTimeoutId); padTimeoutId = null; }
       if (leadTimeoutId) { clearTimeout(leadTimeoutId); leadTimeoutId = null; }
       if (noiseTimeoutId) { clearTimeout(noiseTimeoutId); noiseTimeoutId = null; }
+      // los timeouts de burbujas dejan de reprogramarse porque running=false
 
       setTimeout(() => {
         if (audioCtx) {
@@ -1163,8 +1347,8 @@
     updateFishWrapper();
   }
 
-  let time = 0;
-  let last = null;
+  let timeFish = 0;
+  let lastFish = null;
 
   let xPos = 0.3;
   let horiz = "drift";
@@ -1216,7 +1400,7 @@
 
   function initState(){
     glowDur   = rand(7,17);
-    glowStart = time;
+    glowStart = timeFish;
     glowMode  = "low";
     glowVal   = 0.4;
     glowOsc   = 0;
@@ -1250,10 +1434,10 @@
   function start(){ requestAnimationFrame(loop); }
 
   function loop(ts){
-    if(!last) last = ts;
-    const dt = (ts - last) / 1000;
-    last = ts;
-    time += dt;
+    if(!lastFish) lastFish = ts;
+    const dt = (ts - lastFish) / 1000;
+    lastFish = ts;
+    timeFish += dt;
 
     if (fishCanMove) {
       updateHorizontal(dt);
@@ -1347,14 +1531,14 @@
 
   function updateGlow(dt){
     if (glowTrans) {
-      let t = (time - glowTransStart) / glowTransDur;
+      let t = (timeFish - glowTransStart) / glowTransDur;
       if (t>1) t=1;
       const e = ease(t);
       glowVal = glowFrom + (glowTo - glowFrom)*e;
 
       if (t>=1) {
         glowTrans = false;
-        glowStart = time;
+        glowStart = timeFish;
         glowOsc   = 0;
       }
       return;
@@ -1367,9 +1551,9 @@
     if (glowMode==="low") {
       glowVal = LOW_MIN + w*(LOW_MAX-LOW_MIN);
 
-      if (time - glowStart >= glowDur) {
+      if (timeFish - glowStart >= glowDur) {
         glowTrans      = true;
-        glowTransStart = time;
+        glowTransStart = timeFish;
         glowTransDur   = rand(0.5,1);
         glowFrom       = glowVal;
         glowTo         = HIGH_MIN;
@@ -1380,9 +1564,9 @@
     } else {
       glowVal = HIGH_MIN + w*(HIGH_MAX-HIGH_MIN);
 
-      if (time - glowStart >= glowDur) {
+      if (timeFish - glowStart >= glowDur) {
         glowTrans      = true;
-        glowTransStart = time;
+        glowTransStart = timeFish;
         glowTransDur   = rand(0.5,1);
         glowFrom       = glowVal;
         glowTo         = (LOW_MIN+LOW_MAX)/2;
@@ -1394,8 +1578,8 @@
 
   function updateFin(dt){
     const noise =
-        Math.sin(time*0.35)*0.10 +
-        Math.sin(time*0.88)*0.05;
+        Math.sin(timeFish*0.35)*0.10 +
+        Math.sin(timeFish*0.88)*0.05;
 
     const isMoving = (yState === "move");
 
@@ -1484,7 +1668,7 @@
 
     ctx.translate(left, top + ah*0.5);
 
-    const angle=Math.sin(time * finSpeed) * 0.26;
+    const angle=Math.sin(timeFish * finSpeed) * 0.26;
     ctx.rotate(angle);
 
     ctx.drawImage(aleta,0,-ah*0.5,aw,ah);
