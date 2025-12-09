@@ -1752,6 +1752,115 @@
       }
     });
   })();
+  <!-- SCRIPT PANTALLA COMPLETA (solo escritorio) -->
+  <script>
+  (function () {
+    "use strict";
+
+    const fsToggle = document.getElementById("fs-toggle");
+
+    function requestFullscreen(elem) {
+      if (!elem) return;
+      const f =
+        elem.requestFullscreen ||
+        elem.webkitRequestFullscreen ||
+        elem.mozRequestFullScreen ||
+        elem.msRequestFullscreen;
+
+      if (f) {
+        return f.call(elem);
+      } else {
+        alert("En este dispositivo el modo pantalla completa puede no estar disponible desde la web.");
+      }
+    }
+
+    function exitFullscreen() {
+      const f =
+        document.exitFullscreen ||
+        document.webkitExitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.msExitFullscreen;
+      if (f) return f.call(document);
+    }
+
+    function isFullscreen() {
+      return (
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      );
+    }
+
+    function updateFsButtonState() {
+      if (isFullscreen()) {
+        fsToggle.classList.add("fs-active");
+      } else {
+        fsToggle.classList.remove("fs-active");
+      }
+    }
+
+    document.addEventListener("fullscreenchange", updateFsButtonState);
+    document.addEventListener("webkitfullscreenchange", updateFsButtonState);
+    document.addEventListener("mozfullscreenchange", updateFsButtonState);
+    document.addEventListener("MSFullscreenChange", updateFsButtonState);
+
+    fsToggle.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isFullscreen()) {
+        exitFullscreen();
+      } else {
+        const target = document.documentElement || document.body;
+        requestFullscreen(target);
+      }
+    });
+  })();
   </script>
+
+  <!-- SCRIPT: RECARGAR EN MÓVILES AL CAMBIAR TAMAÑO / ORIENTACIÓN -->
+  <script>
+  (function () {
+    "use strict";
+
+    function isMobile() {
+      return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    }
+
+    let resizeTimeout = null;
+    let lastW = window.innerWidth;
+    let lastH = window.innerHeight;
+
+    function reloadIfSizeChanged() {
+      if (!isMobile()) return;
+
+      const newW = window.innerWidth;
+      const newH = window.innerHeight;
+
+      // Si realmente cambió el tamaño de la pantalla → recargar
+      if (newW !== lastW || newH !== lastH) {
+        lastW = newW;
+        lastH = newH;
+        location.reload();
+      }
+    }
+
+    // Cuando cambia el tamaño (por barras, zoom, etc.) en móvil
+    window.addEventListener("resize", () => {
+      if (!isMobile()) return;
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(reloadIfSizeChanged, 350);
+    });
+
+    // Cuando el dispositivo rota (portrait ↔ landscape)
+    window.addEventListener("orientationchange", () => {
+      if (!isMobile()) return;
+      setTimeout(() => location.reload(), 350);
+    });
+  })();
+  </script>
+
 </body>
 </html>
+
