@@ -12,30 +12,32 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-   :root {
-  /* Altura real de la ventana, la rellenaremos con JS */
-  --app-vh: 100vh;
-}
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 10% 0%, #3f7f82 0%, #0b3a3e 35%, #020e10 80%),
+        linear-gradient(to bottom, #083234, #020b0d);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #e5f3ff;
+    }
 
-html, body {
-  height: var(--app-vh);
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 10% 0%, #3f7f82 0%, #0b3a3e 35%, #020e10 80%),
-    linear-gradient(to bottom, #083234, #020b0d);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #e5f3ff;
-}
+    /* Cuando congelamos para rotación móvil, apagamos animaciones y transiciones */
+    body.freeze * {
+      animation: none !important;
+      transition: none !important;
+    }
 
-.sea-container {
-  position: relative;
-  width: 100vw;
-  height: var(--app-vh);
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity .7s ease-out, transform .7s ease-out;
-}
-
+    .sea-container {
+      position: fixed;
+      inset: 0;         /* top:0; right:0; bottom:0; left:0; */
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .7s ease-out, transform .7s ease-out;
+    }
     .sea-container.visible {
       opacity: 1;
       transform: translateY(0);
@@ -53,7 +55,7 @@ html, body {
     /* Fondo de algas (detrás de todo) */
     .alga-bg { z-index: 5; }
 
-    /* Algas enfocadas delante del fondo, pero SIEMPRE detrás del pez */
+    /* Algas enfocadas siempre detrás del pez */
     .alga-fg {
       z-index: 20;
       filter: saturate(.95);
@@ -507,6 +509,7 @@ html, body {
       window.innerWidth || document.documentElement.clientWidth || screen.width;
 
     const isPortrait = () => getVH() > getVW();
+    const isMobile = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     function applyRandomMask(img) {
       const cut = random(82, 94);
@@ -804,15 +807,28 @@ html, body {
       createParticles();
     });
 
-    window.addEventListener("resize", relayoutScene);
+    // En escritorio, simplemente relayout en resize
+    window.addEventListener("resize", () => {
+      if (!isMobile()) {
+        relayoutScene();
+      }
+    });
 
+    // En móviles: congelar y recargar rápido al cambiar orientación
     window.addEventListener("orientationchange", () => {
-      setTimeout(relayoutScene, 300);
+      if (isMobile()) {
+        document.body.classList.add("freeze");
+        setTimeout(() => {
+          location.reload();
+        }, 80);
+      } else {
+        setTimeout(relayoutScene, 300);
+      }
     });
   })();
   </script>
 
-  <!-- SCRIPT DEL SONIDO (con burbujas integradas) -->
+  <!-- SCRIPT DEL SONIDO (con burbujas más suaves) -->
   <script>
   (function () {
     "use strict";
@@ -823,7 +839,7 @@ html, body {
 
     let running = false;
     let userVolume = 0.45;
-    const MIN_VOL = 0.01;
+    const MIN_VOL = 0.12;
     const MAX_VOL = 0.7;
 
     let padTimeoutId = null;
@@ -1110,7 +1126,7 @@ html, body {
       bubFilter.frequency.setValueAtTime(900, now);
       bubFilter.frequency.exponentialRampToValueAtTime(400, now + 0.2);
 
-      const level = (0.18 + Math.random() * 0.40) * 0.25;
+      const level = (0.18 + Math.random() * 0.40) * 0.5; // burbujas a la mitad
 
       envGain.gain.setValueAtTime(0.0001, now);
       envGain.gain.linearRampToValueAtTime(level, now+0.02);
@@ -1758,137 +1774,7 @@ html, body {
       }
     });
   })();
-  <!-- SCRIPT PANTALLA COMPLETA (solo escritorio) -->
-  <script>
-  (function () {
-    "use strict";
-
-    const fsToggle = document.getElementById("fs-toggle");
-
-    function requestFullscreen(elem) {
-      if (!elem) return;
-      const f =
-        elem.requestFullscreen ||
-        elem.webkitRequestFullscreen ||
-        elem.mozRequestFullScreen ||
-        elem.msRequestFullscreen;
-
-      if (f) {
-        return f.call(elem);
-      } else {
-        alert("En este dispositivo el modo pantalla completa puede no estar disponible desde la web.");
-      }
-    }
-
-    function exitFullscreen() {
-      const f =
-        document.exitFullscreen ||
-        document.webkitExitFullscreen ||
-        document.mozCancelFullScreen ||
-        document.msExitFullscreen;
-      if (f) return f.call(document);
-    }
-
-    function isFullscreen() {
-      return (
-        document.fullscreenElement ||
-        document.webkitFullscreenElement ||
-        document.mozFullScreenElement ||
-        document.msFullscreenElement
-      );
-    }
-
-    function updateFsButtonState() {
-      if (isFullscreen()) {
-        fsToggle.classList.add("fs-active");
-      } else {
-        fsToggle.classList.remove("fs-active");
-      }
-    }
-
-    document.addEventListener("fullscreenchange", updateFsButtonState);
-    document.addEventListener("webkitfullscreenchange", updateFsButtonState);
-    document.addEventListener("mozfullscreenchange", updateFsButtonState);
-    document.addEventListener("MSFullscreenChange", updateFsButtonState);
-
-    fsToggle.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (isFullscreen()) {
-        exitFullscreen();
-      } else {
-        const target = document.documentElement || document.body;
-        requestFullscreen(target);
-      }
-    });
-  })();
   </script>
-
-  <!-- SCRIPT: RECARGAR EN MÓVILES AL CAMBIAR TAMAÑO / ORIENTACIÓN -->
-  <script>
-  (function () {
-    "use strict";
-
-    function isMobile() {
-      return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    }
-
-    let resizeTimeout = null;
-    let lastW = window.innerWidth;
-    let lastH = window.innerHeight;
-
-    function reloadIfSizeChanged() {
-      if (!isMobile()) return;
-
-      const newW = window.innerWidth;
-      const newH = window.innerHeight;
-
-      // Si realmente cambió el tamaño de la pantalla → recargar
-      if (newW !== lastW || newH !== lastH) {
-        lastW = newW;
-        lastH = newH;
-        location.reload();
-      }
-    }
-
-    // Cuando cambia el tamaño (por barras, zoom, etc.) en móvil
-    window.addEventListener("resize", () => {
-      if (!isMobile()) return;
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(reloadIfSizeChanged, 350);
-    });
-
-    // Cuando el dispositivo rota (portrait ↔ landscape)
-    window.addEventListener("orientationchange", () => {
-      if (!isMobile()) return;
-      setTimeout(() => location.reload(), 350);
-    });
-  })();
-  </script>
-<script>
-(function () {
-  "use strict";
-
-  // Actualiza la variable --app-vh con la altura real de la ventana
-  function updateAppVH() {
-    const h = window.innerHeight;
-    document.documentElement.style.setProperty("--app-vh", h + "px");
-  }
-
-  // Lo llamamos al cargar la página
-  window.addEventListener("load", updateAppVH);
-
-  // Y cada vez que cambie tamaño (por barras, rotación, etc.)
-  window.addEventListener("resize", () => {
-    updateAppVH();
-  });
-
-  // Si quieres mantener también el reload en móviles al rotar, puedes dejar
-  // además tu script de orientationchange aparte.
-})();
-</script>
 
 </body>
 </html>
-
