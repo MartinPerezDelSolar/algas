@@ -332,7 +332,7 @@
       transform: translateY(-10px);
     }
 
-    /* BOTÓN PANTALLA COMPLETA (solo texto y corchetes) */
+    /* BOTÓN PANTALLA COMPLETA (solo texto y corchetes, área clic mayor) */
     #fs-toggle {
       position: fixed;
       left: 16px;
@@ -348,24 +348,51 @@
       cursor: pointer;
       user-select: none;
       transform-origin: left bottom;
-      animation: fsGlow 7.5s ease-in-out infinite;
       text-shadow: 0 0 6px rgba(15,23,42,0.9);
       background: none;
       border: none;
       box-shadow: none;
-      padding: 0;
+      padding: 8px 14px; /* zona rectangular clicable más grande */
+      animation: fsFloat 18s ease-in-out infinite;
+    }
+
+    /* Animación acuosa del texto del botón */
+    @keyframes fsFloat {
+      0%, 55%, 100% {
+        transform: translateY(0);
+        opacity: 0.88;
+      }
+      8% {
+        transform: translateY(-2px);
+        opacity: 0.96;
+      }
+      16% {
+        transform: translateY(1px);
+        opacity: 0.92;
+      }
+      24% {
+        transform: translateY(-1px);
+        opacity: 0.96;
+      }
+      32% {
+        transform: translateY(1px);
+        opacity: 0.9;
+      }
+      40% {
+        transform: translateY(0);
+        opacity: 0.86;
+      }
     }
 
     #fs-toggle:hover {
       color: #e0faff;
-      transform: translateY(-1px) scale(1.02);
       text-shadow:
         0 0 6px rgba(15,23,42,0.9),
         0 0 16px rgba(56,189,248,0.55);
     }
 
     #fs-toggle:active {
-      transform: translateY(1px) scale(0.99);
+      transform: translateY(1px);
       text-shadow: 0 0 4px rgba(15,23,42,0.95);
     }
 
@@ -385,13 +412,6 @@
 
     #fs-toggle.fs-active {
       color: #a5f3fc;
-    }
-
-    @keyframes fsGlow {
-      0%   { opacity: 0.82; transform: scale(1); }
-      30%  { opacity: 0.96; transform: scale(1.02); }
-      60%  { opacity: 0.88; transform: scale(1); }
-      100% { opacity: 0.82; transform: scale(1); }
     }
 
     @keyframes bracketsWave {
@@ -448,10 +468,10 @@
   </div>
 
   <!-- Botón pantalla completa (solo texto) -->
-  <div id="fs-toggle">
+  <button id="fs-toggle" type="button">
     <span class="label">pantalla completa</span>
     <span class="brackets">[  ]</span>
-  </div>
+  </button>
 
   <!-- SCRIPT FONDO MARINO -->
   <script>
@@ -816,7 +836,7 @@
 
     let running = false;
     let userVolume = 0.45;
-    const MIN_VOL = 0.05;
+    const MIN_VOL = 0.12;
     const MAX_VOL = 0.7;
 
     let padTimeoutId = null;
@@ -1709,17 +1729,27 @@
     const fsToggle = document.getElementById("fs-toggle");
 
     function requestFullscreen(elem) {
-      if (elem.requestFullscreen) return elem.requestFullscreen();
-      if (elem.webkitRequestFullscreen) return elem.webkitRequestFullscreen();
-      if (elem.mozRequestFullScreen) return elem.mozRequestFullScreen();
-      if (elem.msRequestFullscreen) return elem.msRequestFullscreen();
+      if (!elem) return;
+      const f =
+        elem.requestFullscreen ||
+        elem.webkitRequestFullscreen ||
+        elem.mozRequestFullScreen ||
+        elem.msRequestFullscreen;
+
+      if (f) {
+        return f.call(elem);
+      } else {
+        alert("En este dispositivo el modo pantalla completa puede no estar disponible desde la web.\nPuedes usar las opciones del navegador (o agregar a pantalla de inicio) para verlo más grande.");
+      }
     }
 
     function exitFullscreen() {
-      if (document.exitFullscreen) return document.exitFullscreen();
-      if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
-      if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
-      if (document.msExitFullscreen) return document.msExitFullscreen();
+      const f =
+        document.exitFullscreen ||
+        document.webkitExitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.msExitFullscreen;
+      if (f) return f.call(document);
     }
 
     function isFullscreen() {
@@ -1751,7 +1781,9 @@
       if (isFullscreen()) {
         exitFullscreen();
       } else {
-        requestFullscreen(document.documentElement);
+        // probamos con el elemento raíz del documento o el body
+        const target = document.documentElement || document.body;
+        requestFullscreen(target);
       }
     });
   })();
