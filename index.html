@@ -1866,6 +1866,28 @@ html, body {
     });
   })();
   </script>
+<script>
+(function () {
+  "use strict";
+
+  // Actualiza la variable --app-vh con la altura real de la ventana
+  function updateAppVH() {
+    const h = window.innerHeight;
+    document.documentElement.style.setProperty("--app-vh", h + "px");
+  }
+
+  // Lo llamamos al cargar la página
+  window.addEventListener("load", updateAppVH);
+
+  // Y cada vez que cambie tamaño (por barras, rotación, etc.)
+  window.addEventListener("resize", () => {
+    updateAppVH();
+  });
+
+  // Si quieres mantener también el reload en móviles al rotar, puedes dejar
+  // además tu script de orientationchange aparte.
+})();
+</script>
 
 </body>
 </html>
