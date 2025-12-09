@@ -588,11 +588,10 @@
     function loadBG() {
       const portrait = isPortrait();
 
-      const baseCount = portrait
-        ? Math.floor(random(3, 5))
+      // EN VERTICAL: SIEMPRE 2 ALGAS DE FONDO
+      const count = portrait
+        ? 2
         : Math.floor(random(7, 11));
-
-      const count = baseCount;
 
       let done = 0;
       bgImages = [];
@@ -630,6 +629,7 @@
 
       const vh = getVH();
       const vw = getVW();
+      const portrait = isPortrait();
 
       const totalHeight = vh;
       const topOffset = 0;
@@ -643,11 +643,20 @@
 
       bgImages.forEach((img, index) => {
         const ratio = img.naturalWidth / img.naturalHeight || 0.4;
+        // en vertical, un poco más angostas para no cortarse
+        let maxWidth = portrait ? vw * 0.48 : vw * 0.35;
+
         let width = totalHeight * ratio;
-        const maxWidth = vw * 0.35;
         if (width > maxWidth) width = maxWidth;
 
-        let center = (index + 1) * segmentWidth;
+        let center;
+        if (portrait && n === 2) {
+          // una hacia la izquierda, otra hacia la derecha
+          center = index === 0 ? vw * 0.25 : vw * 0.75;
+        } else {
+          center = (index + 1) * segmentWidth;
+        }
+
         let left = center - width / 2;
 
         if (left < marginLeft) left = marginLeft;
