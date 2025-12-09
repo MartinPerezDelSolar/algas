@@ -12,24 +12,30 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at 10% 0%, #3f7f82 0%, #0b3a3e 35%, #020e10 80%),
-        linear-gradient(to bottom, #083234, #020b0d);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #e5f3ff;
-    }
+   :root {
+  /* Altura real de la ventana, la rellenaremos con JS */
+  --app-vh: 100vh;
+}
 
-    .sea-container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity .7s ease-out, transform .7s ease-out;
-    }
+html, body {
+  height: var(--app-vh);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 0%, #3f7f82 0%, #0b3a3e 35%, #020e10 80%),
+    linear-gradient(to bottom, #083234, #020b0d);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #e5f3ff;
+}
+
+.sea-container {
+  position: relative;
+  width: 100vw;
+  height: var(--app-vh);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .7s ease-out, transform .7s ease-out;
+}
+
     .sea-container.visible {
       opacity: 1;
       transform: translateY(0);
