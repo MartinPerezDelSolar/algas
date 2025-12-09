@@ -221,14 +221,17 @@
       }
     }
 
-    /* ELEMENTOS DE UI QUE SE DESVANECEN EN FULLSCREEN */
+    /* ELEMENTOS DE UI QUE SE DESVANECEN EN FULLSCREEN (via filtro, no opacidad) */
     .ui-fade {
-      transition: opacity .6s ease-in-out, transform .6s ease-in-out;
+      transition:
+        filter .8s ease-in-out,
+        color .8s ease-in-out,
+        text-shadow .8s ease-in-out;
     }
     .ui-fade.fs-hidden {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(6px);
+      filter: brightness(0.08) saturate(0) contrast(0.7);
+      color: rgba(0,0,0,0.02);
+      text-shadow: none;
     }
 
     /* ICONO DE SONIDO */
@@ -251,11 +254,21 @@
       box-shadow: 0 0 25px rgba(0,0,0,0.8);
       opacity: 0;
       transform: scale(0.9);
-      transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+      transition: opacity 0.35s ease-out, transform 0.35s ease-out,
+                  filter .8s ease-in-out, box-shadow .8s ease-in-out;
       z-index: 110;
       touch-action: none;
       user-select: none;
       -webkit-user-drag: none;
+    }
+
+    /* Cuando se oculta en fullscreen: mezclar con el fondo */
+    #speakerIcon.ui-fade.fs-hidden {
+      filter: brightness(0.1) saturate(0) contrast(0.7);
+      box-shadow: 0 0 0 rgba(0,0,0,0.0);
+    }
+    #speakerIcon.ui-fade.fs-hidden img {
+      filter: brightness(0.08) saturate(0) contrast(0.7);
     }
 
     #speakerIcon:hover { opacity: .9; }
@@ -368,6 +381,10 @@
       box-shadow: none;
       padding: 8px 14px;
       animation: fsFloat 18s ease-in-out infinite;
+      transition:
+        filter .8s ease-in-out,
+        color .8s ease-in-out,
+        text-shadow .8s ease-in-out;
     }
 
     @keyframes fsFloat {
@@ -1719,7 +1736,7 @@
   };
   </script>
 
-  <!-- SCRIPT PANTALLA COMPLETA (PC: fade de toda la UI) -->
+  <!-- SCRIPT PANTALLA COMPLETA (PC: desvanecer UI bajando brillo / mezcla) -->
   <script>
   (function () {
     "use strict";
@@ -1761,21 +1778,15 @@
       );
     }
 
-    // Mostrar UI en fullscreen
     function showUiFs() {
       uiFaders.forEach(el => {
         el.classList.remove("fs-hidden");
-        el.style.opacity = "";          // vuelve al valor de CSS
-        el.style.transform = "";        // vuelve al valor de CSS
       });
     }
 
-    // Ocultar UI en fullscreen
     function hideUiFs() {
       uiFaders.forEach(el => {
         el.classList.add("fs-hidden");
-        el.style.opacity = "0";
-        el.style.transform = "translateY(6px)";
       });
     }
 
